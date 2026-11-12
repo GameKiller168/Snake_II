@@ -46,7 +46,7 @@ The field wraps around: leave on one side, come back on the other. Hitting your 
 - What the original did not have was added around it: wrap-around, collisions, levels, the bonus bug, a title screen, pause, game over, sound, best scores, touch controls.
 - The 2021 engine has no corner pieces: at a turn the two straight stretches leave a gap and one of them pokes out of the bend. v2.0 closes the turns. The shape was derived from the photo of the real game on page 5 of the PDF and is switchable (`?corners=2021`), the straight parts, heads, apples and digits are never touched.
 
-Things that are my own estimates and not measured from the real game: the size of the field (21 x 10 cells), the speed of each level, the scoring numbers, the look of the bonus bug. Mazes are not included.
+The goal of the next versions is a 1:1 recreation of the real Nokia 3310 game. Not everything in v2.0 is that yet: [`web/FIDELITY.md`](web/FIDELITY.md) lists every element with what it rests on (2021 code, a web claim, or my own estimate) and what would settle it. Mazes are not included.
 
 ## Tests
 
@@ -54,4 +54,4 @@ Things that are my own estimates and not measured from the real game: the size o
 
 ## Magyarul
 
-A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul). A `v2.0` ugyanez a játék böngészőben, a `web/` mappában: nyisd meg a `web/index.html`-t, vagy indíts egy statikus szervert (`cd web && python3 -m http.server 8080`). Nyilak / WASD / swipe az irányításhoz, Enter vagy Szóköz az indításhoz, P a szünethez. A kanyarok javítása kikapcsolható az `?corners=2021` paraméterrel.
+A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul). A `v2.0` ugyanez a játék böngészőben, a `web/` mappában: nyisd meg a `web/index.html`-t, vagy indíts egy statikus szervert (`cd web && python3 -m http.server 8080`). Nyilak / WASD / swipe az irányításhoz, Enter vagy Szóköz az indításhoz, P a szünethez. A kanyarok javítása kikapcsolható az `?corners=2021` paraméterrel. Hogy melyik elem mire épül (2021-es kód, webes állítás vagy becslés), azt a [`web/FIDELITY.md`](web/FIDELITY.md) tartalmazza.

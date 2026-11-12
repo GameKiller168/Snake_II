@@ -1,0 +1,9 @@
+{
+  "name": "snake-ii-web",
+  "private": true,
+  "description": "Snake II in the browser - dependency-free, no build step",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8080"
+  }
+}

@@ -42,7 +42,7 @@ The field wraps around: leave on one side, come back on the other. Hitting your 
 
 - The display is the original 84 x 48 LCD, every pixel a 10 x 12 rectangle with 1 pixel grid lines, the snake advances 4 LCD pixels per step, apples sit on the same lattice.
 - The sprite tables (`BodyParts`, `Apple`, `Display`) and the paint logic of `Screen.paint` are ported pixel for pixel to `web/js/sprites.js` and `web/js/font.js`.
-- That claim is tested: `web/tests/java-reference/GoldenDump.java` runs the **original** Java `Screen.paint` on 122 game states and stores the resulting LCD frames; the JavaScript port has to reproduce every one of them bit for bit (`npm test`).
+- That claim is tested: `web/tests/java-reference/GoldenDump.java` runs the **original** Java `Screen.paint` on 122 game states and stores the resulting LCD frames; the JavaScript port has to reproduce every one of them bit for bit (`cd web && npm test`).
 - What the original did not have was added around it: wrap-around, collisions, levels, the bonus bug, a title screen, pause, game over, sound, best scores, touch controls.
 - The 2021 engine has no corner pieces: at a turn the two straight stretches leave a gap and one of them pokes out of the bend. v2.0 closes the turns. The shape was derived from the photo of the real game on page 5 of the PDF and is switchable (`?corners=2021`), the straight parts, heads, apples and digits are never touched.
 

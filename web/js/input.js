@@ -51,6 +51,14 @@
   var SWIPE_MIN_PX = 22; // finger travel that counts as a swipe
   var TAP_MAX_MS = 350;
 
+  // Inside an iframe (an embedded page, a preview) the first touch has to hand the keyboard to this
+  // document; calling focus() on the window does that and shows no focus ring.
+  function takeFocus() {
+    try {
+      if (typeof window !== 'undefined' && typeof window.focus === 'function') window.focus();
+    } catch (err) { /* not essential */ }
+  }
+
   /**
    * @param {object} o
    * @param {function} o.onAction  (action, arg, source) source: 'kbd' | 'touch' | 'mouse'
@@ -74,6 +82,7 @@
     var g = null;
     stage.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
+      takeFocus();
       g = { id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp, moved: false };
       try { stage.setPointerCapture(e.pointerId); } catch (err) { /* not essential */ }
       e.preventDefault();
@@ -106,6 +115,7 @@
       pad.addEventListener('pointerdown', function (e) {
         var b = find(e);
         if (!b) return;
+        takeFocus();
         e.preventDefault();
         b.classList.add('down');
         o.onAction(b.getAttribute('data-action'), undefined, e.pointerType === 'mouse' ? 'mouse' : 'touch');

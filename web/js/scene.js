@@ -78,18 +78,12 @@
     }
   }
 
-  /** Time left of the bonus bug: a gauge in the header, 1 pixel per remaining step. */
+  /** Time left of the bonus bug: a bar in the header, one pixel per remaining step. */
   function drawBonusBar(fb, ticks, time) {
-    var x = config.BONUS_BAR_X, y = config.BONUS_BAR_Y, w = config.BONUS_BAR_W, h = config.BONUS_BAR_H;
     var low = ticks <= config.BONUS_TICKS / 4;
-    // outline of the full gauge
-    fb.hline(x - 1, y - 1, w + 2);
-    fb.hline(x - 1, y + h, w + 2);
-    fb.vline(x - 1, y, h);
-    fb.vline(x + w, y, h);
     if (low && !blinkOn(time, 200)) return; // the last quarter flashes
-    var fill = Math.max(1, Math.round((ticks * w) / config.BONUS_TICKS));
-    fb.fillRect(x, y, fill, h);
+    var fill = Math.max(1, Math.round((ticks * config.BONUS_BAR_W) / config.BONUS_TICKS));
+    fb.fillRect(config.BONUS_BAR_X, config.BONUS_BAR_Y, fill, config.BONUS_BAR_H);
   }
 
   function drawField(fb, view) {

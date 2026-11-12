@@ -134,18 +134,17 @@ test('the snake flashes while dying and nothing else does', () => {
   assert.ok(hidden.equals(empty), 'hidden = the same field without the snake');
 });
 
-test('the bonus gauge shrinks one pixel per step and flashes in the last quarter', () => {
-  const x = config.BONUS_BAR_X, y = config.BONUS_BAR_Y + 1, w = config.BONUS_BAR_W;
+test('the bonus bar shrinks one pixel per step and flashes in the last quarter', () => {
+  const x = config.BONUS_BAR_X, y = config.BONUS_BAR_Y, w = config.BONUS_BAR_W, h = config.BONUS_BAR_H;
   for (const ticks of [config.BONUS_TICKS, 40, 20]) {
     const g = makeGame({ bonus: { x: 3, y: 6, ticks } });
     const fb = render({ mode: 'play', time: 0, game: g });
     const fill = Math.round((ticks * w) / config.BONUS_TICKS);
-    for (let i = 0; i < w; i++) assert.equal(fb.get(x + i, y), i < fill ? 1 : 0, `ticks ${ticks}, pixel ${i}`);
-    // the outline of the full gauge is always there
-    assert.equal(fb.get(x - 1, y), 1);
-    assert.equal(fb.get(x + w, y), 1);
-    assert.equal(fb.get(x + 5, y - 2), 1);
-    assert.equal(fb.get(x + 5, y + 2), 1);
+    for (let row = y; row < y + h; row++) {
+      for (let i = 0; i < w + 2; i++) assert.equal(fb.get(x + i, row), i < fill ? 1 : 0, `ticks ${ticks}, row ${row}, pixel ${i}`);
+    }
+    assert.equal(fb.get(x + 3, y - 1), 0, 'nothing above the bar');
+    assert.equal(fb.get(x + 3, y + h), 0, 'nothing below the bar');
   }
   const g = makeGame({ bonus: { x: 3, y: 6, ticks: 10 } });
   const on = render({ mode: 'play', time: 0, game: g });

@@ -46,7 +46,7 @@
     MAX_SCORE: 9999,       // four digits, like the original display
     BONUS_EVERY: 5,        // a bonus bug shows up after every 5th apple
     BONUS_TICKS: 56,       // lifetime of a bonus bug in steps (1 bar pixel per step)
-    BONUS_BASE: 5,         // bonus = level * (BONUS_BASE + remaining / 4 + 3 * skippedBonuses)
+    BONUS_BASE: 5,         // bonus = level * (BONUS_BASE + floor(remaining / 4))
     BONUS_BAR_X: 22,
     BONUS_BAR_Y: 1,
     BONUS_BAR_W: 56,

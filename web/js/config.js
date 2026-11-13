@@ -1,5 +1,5 @@
 /*
- * Snake II - browser edition (v2.1): the constants of the game.
+ * Snake II - browser edition (v2.1.2): the constants of the game.
  *
  * Every number in this file has an evidence level, see FIDELITY.md:
  *   FW    read from the program of a real Nokia 3310 (firmware v6.39) and cross-checked with footage

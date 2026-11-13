@@ -17,6 +17,7 @@ test('language matching accepts regional browser tags and falls back to English'
 
 test('every supported language fits the Options rows and draws its instructions', () => {
   for (const language of I18n.LANGUAGES) {
+    Text.setFontPack(I18n.fontPack(language.code));
     const labels = I18n.text('OPTIONS', language.code);
     const optionLabels = [
       I18n.text('GAME_SOUNDS', language.code), I18n.text('KEY_TONES', language.code),
@@ -34,4 +35,24 @@ test('every supported language fits the Options rows and draws its instructions'
     Screens.drawInstructions(frame, 0, body, I18n.text('NEXT', language.code), language.code !== 'en');
     assert.ok(frame.toAscii().includes('#'), language.code);
   }
+});
+
+test('all translated UI strings and language names have both Nokia small-font weights', () => {
+  for (const language of I18n.LANGUAGES) {
+    Text.setFontPack(I18n.fontPack(language.code));
+    const strings = [language.name, ...I18n.LANGUAGES.map((item) => item.name)];
+    const keys = new Set([...Object.keys(I18n.PACKS[language.code] || {}), ...Object.keys(require('../js/texts.js'))]);
+    for (const key of keys) {
+      const value = I18n.text(key, language.code, { u: 'Magyar', n: 123 });
+      if (typeof value === 'string') strings.push(value);
+      else if (Array.isArray(value)) strings.push(...value);
+    }
+    for (const value of strings) {
+      for (const line of value.split('\n')) {
+        assert.ok(Text.canDraw('A', line), `${language.code} thin: ${line}`);
+        assert.ok(Text.canDraw('B', line), `${language.code} bold: ${line}`);
+      }
+    }
+  }
+  Text.setFontPack('B');
 });

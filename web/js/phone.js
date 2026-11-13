@@ -30,6 +30,7 @@
   var Screens = NS.Screens || (req ? require('./screens.js') : null);
   var Store = NS.Store || (req ? require('./store.js') : null);
   var I18n = NS.I18n || (req ? require('./i18n.js') : null);
+  var Text = NS.Text || (req ? require('./text.js') : null);
 
   var RET = Engine.RET;
 
@@ -473,6 +474,7 @@
 
   /** The picture of the display now (the same Framebuffer every time). */
   Phone.prototype.draw = function () {
+    Text.setFontPack(I18n.fontPack(this.store.language));
     var fb = this.fb;
     var t = this.time - this.modeStart;
     switch (this.mode) {

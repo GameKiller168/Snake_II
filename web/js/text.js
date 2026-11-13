@@ -1,13 +1,11 @@
 /*
  * Drawing texts into the 84 x 48 matrix: the two small fonts (A thin, B bold), the large font of the notes and
- * the numbers of the menu header. The glyph pictures live in pictures.js.
+ * the numbers of the menu header. Complete locale fonts come from the phone's PPM language packs.
  *
  * Rules (all measured or read from the phone, see FIDELITY.md):
- *   - small fonts: proportional, one empty column after every glyph, cells 8 rows high
- *   - large font: one empty column after every glyph (R is the one exception, see pictures.js), a space is 3 columns wide,
- *     cells 11 rows high. Glyphs are measured in footage or, where marked [EST] in pictures.js (LARGE_EST), drawn after
- *     the pattern of the measured ones; a line that needs a glyph that is in neither table is drawn in the bold font
- *     instead. The width of such a glyph is [EST] 8 columns when text is wrapped into lines.
+ *   - small fonts: proportional widths and 8-row cells
+ *   - large font: widths and glyphs from the active PPM pack; unsupported characters use the bold small font. Unknown
+ *     large glyphs count as 8 columns when text is wrapped into lines.
  *   - header numbers: boxes 5 wide, one empty column between boxes, "-" is 2 columns wide and sits on row 3,
  *     the string ends at column 82
  */
@@ -16,6 +14,7 @@
 
   var NS = (globalThis.SnakeII = globalThis.SnakeII || {});
   var Pictures = NS.Pictures || (typeof require === 'function' ? require('./pictures.js') : null);
+  var FontPacks = NS.FontPacks || (typeof require === 'function' ? require('./fontpacks.js') : null);
   var ACCENTED = {
     '\u00c0': ['A', 'grave'], '\u00c1': ['A', 'acute'], '\u00c2': ['A', 'circumflex'], '\u00c3': ['A', 'tilde'], '\u00c4': ['A', 'diaeresis'], '\u00c5': ['A', 'ring'],
     '\u0102': ['A', 'breve'], '\u0104': ['A', 'ogonek'], '\u00c7': ['C', 'comma'], '\u0106': ['C', 'acute'], '\u010c': ['C', 'caron'], '\u010e': ['D', 'caron'], '\u0110': ['D', 'stroke'],
@@ -46,11 +45,126 @@
     return base ? { w: base.w, rows: base.rows, mark: def[1] } : null;
   }
 
+  var activeFontPack = 'B';
+  var decodedFontGlyphs = {};
+  var fallbackCanvas = null;
+  var fallbackContext = null;
+  var ROMANIAN_FONT_ALIASES = {
+    '\u0218': '\u015e', '\u0219': '\u015f', '\u021a': '\u0162', '\u021b': '\u0163'
+  };
+
+  function browserTextContext() {
+    if (fallbackContext) return fallbackContext;
+    try {
+      if (!globalThis.document || !globalThis.document.createElement) return null;
+      fallbackCanvas = globalThis.document.createElement('canvas');
+      fallbackCanvas.width = 256;
+      fallbackCanvas.height = 16;
+      fallbackContext = fallbackCanvas.getContext('2d', { willReadFrequently: true });
+      return fallbackContext;
+    }
+    catch (ignore) { return null; }
+  }
+
+  function rtlText(str) {
+    return /[\u0590-\u08ff\ufb1d-\ufefc]/.test(str);
+  }
+
+  function requiresBrowserText(font, str) {
+    if (/[\u0590-\u08ff\ufb1d-\ufefc\u0900-\u0dff\u0e00-\u0eff\u1100-\u11ff\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff]/.test(str)) return true;
+    var style = font === 'B' ? 'smallbold' : 'smallplain';
+    for (var i = 0; i < str.length; i++) {
+      var ch = str.charAt(i);
+      if (ch.charCodeAt(0) > 0x7e && !firmwareGlyph(style, ch) && !ROMANIAN_FONT_ALIASES[ch]) return true;
+    }
+    return false;
+  }
+
+  function browserTextWidth(str, font) {
+    var ctx = browserTextContext();
+    if (!ctx) return null;
+    ctx.font = (font === 'B' ? 'bold ' : '') + '8px sans-serif';
+    ctx.direction = rtlText(str) ? 'rtl' : 'ltr';
+    return Math.ceil(ctx.measureText(str).width) + 1;
+  }
+
+  function drawBrowserText(fb, str, x, y, invert, font) {
+    var ctx = browserTextContext();
+    if (!ctx) return null;
+    ctx.clearRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+    ctx.font = (font === 'B' ? 'bold ' : '') + '8px sans-serif';
+    ctx.direction = rtlText(str) ? 'rtl' : 'ltr';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(str, 2, 8);
+    var image = ctx.getImageData(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+    var minY = fallbackCanvas.height, maxY = -1;
+    for (var row = 0; row < image.height; row++) {
+      for (var col = 0; col < image.width; col++) {
+        if (image.data[(row * image.width + col) * 4 + 3] >= 128) {
+          if (row < minY) minY = row;
+          if (row > maxY) maxY = row;
+        }
+      }
+    }
+    for (row = minY; row <= maxY; row++) {
+      for (col = 0; col < image.width; col++) {
+        if (image.data[(row * image.width + col) * 4 + 3] >= 128) fb.set(x + col - 2, y + row - minY, invert ? 0 : 1);
+      }
+    }
+    return x + browserTextWidth(str, font);
+  }
+
+  function firmwareGlyph(style, ch) {
+    var code = ch.charCodeAt(0);
+    var key = code.toString(16);
+    while (key.length < 4) key = '0' + key;
+    // PPM B is the shared Latin baseline; locale packs supply their native non-ASCII glyphs.
+    var packs = code >= 0x20 && code <= 0x7e ? ['B', activeFontPack] : [activeFontPack];
+    var record = null;
+    var sourcePack = activeFontPack;
+    for (var i = 0; i < packs.length && !record; i++) {
+      var packCode = packs[i];
+      var pack = FontPacks && FontPacks.PACKS && FontPacks.PACKS[packCode];
+      var table = pack && pack[style];
+      record = table && table[key];
+      if (record) {
+        sourcePack = packCode;
+      } else if (ROMANIAN_FONT_ALIASES[ch]) {
+        var alias = ROMANIAN_FONT_ALIASES[ch].charCodeAt(0).toString(16);
+        while (alias.length < 4) alias = '0' + alias;
+        record = table && table[alias];
+        if (record) {
+          sourcePack = packCode;
+          key = alias;
+        }
+      }
+    }
+    if (!record) return null;
+    var cacheKey = sourcePack + ':' + style + ':' + key;
+    if (!decodedFontGlyphs[cacheKey]) {
+      decodedFontGlyphs[cacheKey] = {
+        w: record.w,
+        a: record.a,
+        rows: record.r ? record.r.split('/') : []
+      };
+    }
+    return decodedFontGlyphs[cacheKey];
+  }
+
+  function setFontPack(code) {
+    activeFontPack = FontPacks && FontPacks.PACKS && FontPacks.PACKS[code] ? code : 'B';
+    return activeFontPack;
+  }
+
   function glyph(font, ch) {
     if (ch === '\u2018' || ch === '\u2019') ch = "'";
+    var exact = firmwareGlyph(font === 'B' ? 'smallbold' : 'smallplain', ch);
+    if (exact) return exact;
     var other = font === 'B' ? 'A' : 'B';
     return FONTS[font][ch] || accentedGlyph(FONTS[font], ch) || FONTS[other][ch] || accentedGlyph(FONTS[other], ch) ||
-      SMALL_EST[ch] || accentedGlyph(SMALL_EST, ch);
+      SMALL_EST[ch] || accentedGlyph(SMALL_EST, ch) || FONTS[font]['?'];
   }
 
   function accentPixels(mark, w, h) {
@@ -133,16 +247,21 @@
 
   /** Width of a string with the one empty column after every glyph. */
   function width(font, str) {
+    if (requiresBrowserText(font, str)) {
+      var measured = browserTextWidth(str, font);
+      if (measured !== null) return measured;
+    }
     var w = 0;
     for (var i = 0; i < str.length; i++) {
       var g = glyphOf(font, str.charAt(i));
       if (!g) throw new Error('font ' + font + ' has no glyph for ' + JSON.stringify(str.charAt(i)));
-      w += g.w + 1;
+      w += g.a === undefined ? g.w + 1 : g.a;
     }
     return w;
   }
 
   function canDraw(font, str) {
+    if (requiresBrowserText(font, str) && browserTextContext()) return true;
     for (var i = 0; i < str.length; i++) {
       if (!glyphOf(font, str.charAt(i))) return false;
     }
@@ -154,11 +273,15 @@
    * them (text on a dark bar). Returns the x after the last glyph.
    */
   function draw(fb, font, str, x, y, invert) {
+    if (requiresBrowserText(font, str)) {
+      var browserEnd = drawBrowserText(fb, str, x, y, invert, font);
+      if (browserEnd !== null) return browserEnd;
+    }
     for (var i = 0; i < str.length; i++) {
       var g = glyphOf(font, str.charAt(i));
       if (!g) throw new Error('font ' + font + ' has no glyph for ' + JSON.stringify(str.charAt(i)));
       drawGlyph(fb, g, x, y, invert, false);
-      x += g.w + 1;
+      x += g.a === undefined ? g.w + 1 : g.a;
     }
     return x;
   }
@@ -186,17 +309,24 @@
 
   // ----- large font of the notes ------------------------------------------------------------------------------------
 
+  function largeGlyph(ch) {
+    if (ch === '\u2018' || ch === '\u2019') ch = "'";
+    return firmwareGlyph('largebold', ch);
+  }
+
   function canDrawLarge(str) {
     for (var i = 0; i < str.length; i++) {
       var ch = str.charAt(i);
-      if (ch !== ' ' && !(LARGE[ch] || accentedGlyph(LARGE, ch))) return false;
+      if (!largeGlyph(ch)) return false;
     }
     return true;
   }
 
   function largeAdvance(ch) {
+    var g = largeGlyph(ch);
+    if (!g) throw new Error('large font has no glyph for ' + JSON.stringify(ch));
+    if (g.a !== undefined) return g.a;
     if (ch === ' ') return LARGE_SPACE;
-    var g = LARGE[ch] || accentedGlyph(LARGE, ch);
     return Pictures.LARGE_ADV[ch] || g.w + 1;
   }
 
@@ -213,7 +343,7 @@
     var w = 0;
     for (var i = 0; i < str.length; i++) {
       var ch = str.charAt(i);
-      w += (ch === ' ' || LARGE[ch] || accentedGlyph(LARGE, ch)) ? largeAdvance(ch) : LARGE_UNKNOWN_ADVANCE;
+      w += largeGlyph(ch) ? largeAdvance(ch) : LARGE_UNKNOWN_ADVANCE;
     }
     return w;
   }
@@ -244,7 +374,7 @@
     var out = [];
     for (var i = 0; i < str.length; i++) {
       var ch = str.charAt(i);
-      if ((Pictures.LARGE_EST[ch] || ACCENTED[ch]) && out.indexOf(ch) < 0) out.push(ch);
+      if (!firmwareGlyph('largebold', ch) && Pictures.LARGE_EST[ch] && out.indexOf(ch) < 0) out.push(ch);
     }
     return out;
   }
@@ -254,7 +384,7 @@
     for (var i = 0; i < str.length; i++) {
       var ch = str.charAt(i);
       if (ch !== ' ') {
-        var g = LARGE[ch] || accentedGlyph(LARGE, ch);
+        var g = largeGlyph(ch);
         drawGlyph(fb, g, x, y, false, true);
       }
       x += largeAdvance(ch);
@@ -293,7 +423,7 @@
         fb.set(x + 1, 3, 1);
         x += 3;
       } else {
-        var g = HEADER[ch];
+        var g = firmwareGlyph('tinyplain', ch) || HEADER[ch];
         if (!g) throw new Error('no header glyph for ' + JSON.stringify(ch));
         for (var r = 0; r < g.rows.length; r++) {
           for (var c = 0; c < g.w; c++) {
@@ -306,6 +436,8 @@
   }
 
   var Text = {
+    setFontPack: setFontPack,
+    getFontPack: function () { return activeFontPack; },
     width: width,
     canDraw: canDraw,
     draw: draw,

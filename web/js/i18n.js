@@ -1,4 +1,4 @@
-/* Localized phone labels and browser-language detection. Translations and added glyph accents are marked EST in FIDELITY.md. */
+/* Localized phone labels, firmware font-pack selection, and browser-language detection. */
 (function () {
   'use strict';
 
@@ -6,10 +6,27 @@
   var req = typeof require === 'function';
   var English = NS.Texts || (req ? require('./texts.js') : {});
   var LANGUAGES = [
-    { code: 'en', name: 'English' }, { code: 'hu', name: 'Magyar' }, { code: 'ro', name: 'Română' },
-    { code: 'de', name: 'Deutsch' }, { code: 'sk', name: 'Slovenčina' }, { code: 'pl', name: 'Polski' },
-    { code: 'fr', name: 'Français' }, { code: 'es', name: 'Español' }
+    { code: 'ar', name: 'العربية' }, { code: 'zh-cn', name: '简体中文' }, { code: 'zh-tw', name: '繁體中文' },
+    { code: 'hr', name: 'Hrvatski' }, { code: 'cs', name: 'Čeština' }, { code: 'da', name: 'Dansk' },
+    { code: 'nl', name: 'Nederlands' }, { code: 'en', name: 'English' }, { code: 'et', name: 'Eesti' },
+    { code: 'fi', name: 'Suomi' }, { code: 'fr', name: 'Français' }, { code: 'de', name: 'Deutsch' },
+    { code: 'el', name: 'Ελληνικά' }, { code: 'he', name: 'עברית' }, { code: 'hi', name: 'हिन्दी' },
+    { code: 'hu', name: 'Magyar' }, { code: 'id', name: 'Bahasa Indonesia' }, { code: 'it', name: 'Italiano' },
+    { code: 'lv', name: 'Latviešu' }, { code: 'lt', name: 'Lietuvių' }, { code: 'ms', name: 'Bahasa Melayu' },
+    { code: 'no', name: 'Norsk' }, { code: 'pl', name: 'Polski' }, { code: 'pt', name: 'Português' },
+    { code: 'ro', name: 'Română' }, { code: 'ru', name: 'Русский' }, { code: 'sr', name: 'Српски' },
+    { code: 'sk', name: 'Slovenčina' }, { code: 'sl', name: 'Slovenščina' }, { code: 'es', name: 'Español' },
+    { code: 'sv', name: 'Svenska' }, { code: 'tl', name: 'Filipino' }, { code: 'th', name: 'ไทย' },
+    { code: 'tr', name: 'Türkçe' }, { code: 'uk', name: 'Українська' }, { code: 'vi', name: 'Tiếng Việt' }
   ];
+
+  var FONT_PACKS = {
+    en: 'B', de: 'B', fr: 'B', it: 'B', nl: 'B', es: 'C', pt: 'C', el: 'C',
+    hu: 'D', ru: 'D', hr: 'D', ro: 'D', sr: 'D', sl: 'D', uk: 'E',
+    sv: 'A', da: 'A', no: 'A', fi: 'A', tr: 'A', ar: 'I', he: 'I',
+    'zh-tw': 'B', 'zh-cn': 'B', tl: 'B', id: 'B', ms: 'B', vi: 'B', th: 'B', hi: 'B',
+    sk: 'J', pl: 'J', et: 'J', lv: 'J', lt: 'J', cs: 'J'
+  };
 
   var PACKS = {
     en: {
@@ -81,7 +98,7 @@
       NEW_GAME: 'Juego nuevo', CONTINUE: 'Continuar', LEVEL: 'Nivel', MAZES: 'Laberintos', TOP_SCORE: 'Récord', INSTRUCTIONS: 'Instrucciones',
       SELECT: 'Elegir', OK: 'OK', NEXT: 'Siguiente', LEVEL_LABEL: 'Nivel:',
       MAZE_NAMES: ['Sin laberinto', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'], SELECTED: '%U elegido',
-      TOP_SCORE_NOTE: 'Récord:\n%N', GAME_OVER_TOP: 'Fin del juego\nRÉCORD:\n%N', GAME_OVER_SCORE: 'Fin del juego\nTu puntuación:\n%N',
+      TOP_SCORE_NOTE: 'Récord:\n%N', GAME_OVER_TOP: 'Fin del juego\nRÉCORD:\n%N', GAME_OVER_SCORE: 'Fin del juego\nPuntuación:\n%N',
       INSTRUCTION_TEXT: 'Haz crecer la serpiente dirigiéndola hacia la comida. Usa las teclas 2, 4, 6 y 8. No puede parar ni retroceder. Evita las paredes y la cola.',
       YOU_WON: '¡HAS GANADO!', OPTIONS: 'Opciones', GAME_SOUNDS: 'Sonido', KEY_TONES: 'Teclas', VIBRATION: 'Vibración', LANGUAGE: 'Idioma', ON: 'Sí', OFF: 'No', SYSTEM: 'Sistema',
       KEYS: 'Teclas', DISPLAY: 'Pantalla del juego', SCROLL_UP: 'Subir', SCROLL_DOWN: 'Bajar', BUTTON_SELECT: 'Elegir',
@@ -89,11 +106,64 @@
     }
   };
 
+  // The v6.39 PPM chart lists these additional menu languages. The main menu uses short labels to fit the 84 px LCD.
+  var MENU_KEYS = [
+    'NEW_GAME', 'CONTINUE', 'LEVEL', 'MAZES', 'TOP_SCORE', 'INSTRUCTIONS', 'OPTIONS', 'GAME_SOUNDS', 'KEY_TONES',
+    'VIBRATION', 'LANGUAGE', 'ON', 'OFF', 'SYSTEM', 'SELECT', 'OK', 'NEXT', 'SELECTED', 'MAZE_NAMES'
+  ];
+  var MENU_TRANSLATIONS = {
+    sv: { NEW_GAME: 'Nytt spel', CONTINUE: 'Fortsätt', LEVEL: 'Nivå', MAZES: 'Labyrinter', TOP_SCORE: 'Rekord', INSTRUCTIONS: 'Instruktion', OPTIONS: 'Inställningar', GAME_SOUNDS: 'Spelljud', KEY_TONES: 'Knappljud', VIBRATION: 'Vibration', LANGUAGE: 'Språk', ON: 'På', OFF: 'Av', SYSTEM: 'System', SELECT: 'Välj', OK: 'OK', NEXT: 'Nästa', SELECTED: '%U valt', MAZE_NAMES: ['Utan labyrint', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    da: { NEW_GAME: 'Nyt spil', CONTINUE: 'Fortsæt', LEVEL: 'Niveau', MAZES: 'Labyrinter', TOP_SCORE: 'Rekord', INSTRUCTIONS: 'Vejledning', OPTIONS: 'Indstillinger', GAME_SOUNDS: 'Spillyd', KEY_TONES: 'Tastelyd', VIBRATION: 'Vibration', LANGUAGE: 'Sprog', ON: 'Til', OFF: 'Fra', SYSTEM: 'System', SELECT: 'Vælg', OK: 'OK', NEXT: 'Næste', SELECTED: '%U valgt', MAZE_NAMES: ['Uden labyrint', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    no: { NEW_GAME: 'Nytt spill', CONTINUE: 'Fortsett', LEVEL: 'Nivå', MAZES: 'Labyrinter', TOP_SCORE: 'Rekord', INSTRUCTIONS: 'Instruksjon', OPTIONS: 'Innstillinger', GAME_SOUNDS: 'Spilllyd', KEY_TONES: 'Tastelyd', VIBRATION: 'Vibrasjon', LANGUAGE: 'Språk', ON: 'På', OFF: 'Av', SYSTEM: 'System', SELECT: 'Velg', OK: 'OK', NEXT: 'Neste', SELECTED: '%U valgt', MAZE_NAMES: ['Uten labyrint', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    fi: { NEW_GAME: 'Uusi peli', CONTINUE: 'Jatka', LEVEL: 'Taso', MAZES: 'Labyrintit', TOP_SCORE: 'Ennätys', INSTRUCTIONS: 'Ohjeet', OPTIONS: 'Asetukset', GAME_SOUNDS: 'Peliääni', KEY_TONES: 'Näppäinääni', VIBRATION: 'Värinä', LANGUAGE: 'Kieli', ON: 'Päällä', OFF: 'Pois', SYSTEM: 'Järjestelmä', SELECT: 'Valitse', OK: 'OK', NEXT: 'Seuraava', SELECTED: '%U valittu', MAZE_NAMES: ['Ei labyrinttia', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    tr: { NEW_GAME: 'Yeni oyun', CONTINUE: 'Devam et', LEVEL: 'Seviye', MAZES: 'Labirentler', TOP_SCORE: 'Rekor', INSTRUCTIONS: 'Yardım', OPTIONS: 'Ayarlar', GAME_SOUNDS: 'Oyun sesi', KEY_TONES: 'Tuş sesi', VIBRATION: 'Titreşim', LANGUAGE: 'Dil', ON: 'Açık', OFF: 'Kapalı', SYSTEM: 'Sistem', SELECT: 'Seç', OK: 'OK', NEXT: 'Sonraki', SELECTED: '%U seçildi', MAZE_NAMES: ['Labirent yok', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    it: { NEW_GAME: 'Nuova partita', CONTINUE: 'Continua', LEVEL: 'Livello', MAZES: 'Labirinti', TOP_SCORE: 'Record', INSTRUCTIONS: 'Istruzioni', OPTIONS: 'Opzioni', GAME_SOUNDS: 'Audio gioco', KEY_TONES: 'Tono tasti', VIBRATION: 'Vibrazione', LANGUAGE: 'Lingua', ON: 'Attivo', OFF: 'Spento', SYSTEM: 'Sistema', SELECT: 'Scegli', OK: 'OK', NEXT: 'Avanti', SELECTED: '%U selezionato', MAZE_NAMES: ['Senza labirinto', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    nl: { NEW_GAME: 'Nieuw spel', CONTINUE: 'Doorgaan', LEVEL: 'Niveau', MAZES: 'Doolhoven', TOP_SCORE: 'Topscore', INSTRUCTIONS: 'Instructies', OPTIONS: 'Opties', GAME_SOUNDS: 'Spelgeluid', KEY_TONES: 'Toetstonen', VIBRATION: 'Trilling', LANGUAGE: 'Taal', ON: 'Aan', OFF: 'Uit', SYSTEM: 'Systeem', SELECT: 'Kies', OK: 'OK', NEXT: 'Volgende', SELECTED: '%U gekozen', MAZE_NAMES: ['Geen doolhof', 'Doolh. 1', 'Doolh. 2', 'Doolh. 3', 'Doolh. 4', 'Doolh. 5'] },
+    pt: { NEW_GAME: 'Novo jogo', CONTINUE: 'Continuar', LEVEL: 'Nível', MAZES: 'Labirintos', TOP_SCORE: 'Recorde', INSTRUCTIONS: 'Instruções', OPTIONS: 'Opções', GAME_SOUNDS: 'Som do jogo', KEY_TONES: 'Som das teclas', VIBRATION: 'Vibração', LANGUAGE: 'Idioma', ON: 'Ativo', OFF: 'Inativo', SYSTEM: 'Sistema', SELECT: 'Escolher', OK: 'OK', NEXT: 'Próximo', SELECTED: '%U selecionado', MAZE_NAMES: ['Sem labirinto', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    el: { NEW_GAME: 'Νέο παιχνίδι', CONTINUE: 'Συνέχεια', LEVEL: 'Επίπεδο', MAZES: 'Λαβύρινθοι', TOP_SCORE: 'Ρεκόρ', INSTRUCTIONS: 'Οδηγίες', OPTIONS: 'Ρυθμίσεις', GAME_SOUNDS: 'Ήχος παιχνιδιού', KEY_TONES: 'Ήχος πλήκτρων', VIBRATION: 'Δόνηση', LANGUAGE: 'Γλώσσα', ON: 'Ενεργό', OFF: 'Ανενεργό', SYSTEM: 'Σύστημα', SELECT: 'Επιλογή', OK: 'OK', NEXT: 'Επόμενο', SELECTED: 'Επιλέχθηκε: %U', MAZE_NAMES: ['Χωρίς λαβύρινθο', 'Λαβ. 1', 'Λαβ. 2', 'Λαβ. 3', 'Λαβ. 4', 'Λαβ. 5'] },
+    hr: { NEW_GAME: 'Nova igra', CONTINUE: 'Nastavi', LEVEL: 'Razina', MAZES: 'Labirinti', TOP_SCORE: 'Rekord', INSTRUCTIONS: 'Upute', OPTIONS: 'Postavke', GAME_SOUNDS: 'Zvuk igre', KEY_TONES: 'Zvuk tipki', VIBRATION: 'Vibracija', LANGUAGE: 'Jezik', ON: 'Uklj.', OFF: 'Isklj.', SYSTEM: 'Sustav', SELECT: 'Odaberi', OK: 'OK', NEXT: 'Dalje', SELECTED: '%U odabran', MAZE_NAMES: ['Bez labirinta', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    ru: { NEW_GAME: 'Новая игра', CONTINUE: 'Продолжить', LEVEL: 'Уровень', MAZES: 'Лабиринты', TOP_SCORE: 'Рекорд', INSTRUCTIONS: 'Инструкция', OPTIONS: 'Настройки', GAME_SOUNDS: 'Звук игры', KEY_TONES: 'Звук клавиш', VIBRATION: 'Вибрация', LANGUAGE: 'Язык', ON: 'Вкл.', OFF: 'Выкл.', SYSTEM: 'Система', SELECT: 'Выбрать', OK: 'ОК', NEXT: 'Далее', SELECTED: '%U выбрано', MAZE_NAMES: ['Без лабиринта', 'Лаб. 1', 'Лаб. 2', 'Лаб. 3', 'Лаб. 4', 'Лаб. 5'] },
+    sr: { NEW_GAME: 'Нова игра', CONTINUE: 'Настави', LEVEL: 'Ниво', MAZES: 'Лавиринти', TOP_SCORE: 'Рекорд', INSTRUCTIONS: 'Упутство', OPTIONS: 'Подешавања', GAME_SOUNDS: 'Звук игре', KEY_TONES: 'Тонови тастера', VIBRATION: 'Вибрација', LANGUAGE: 'Језик', ON: 'Укљ.', OFF: 'Искљ.', SYSTEM: 'Систем', SELECT: 'Изабери', OK: 'ОК', NEXT: 'Даље', SELECTED: '%U изабрано', MAZE_NAMES: ['Без лавиринта', 'Лав. 1', 'Лав. 2', 'Лав. 3', 'Лав. 4', 'Лав. 5'] },
+    sl: { NEW_GAME: 'Nova igra', CONTINUE: 'Nadaljuj', LEVEL: 'Raven', MAZES: 'Labirinti', TOP_SCORE: 'Rekord', INSTRUCTIONS: 'Navodila', OPTIONS: 'Nastavitve', GAME_SOUNDS: 'Zvok igre', KEY_TONES: 'Zvok tipk', VIBRATION: 'Vibracija', LANGUAGE: 'Jezik', ON: 'Vklop', OFF: 'Izklop', SYSTEM: 'Sistem', SELECT: 'Izberi', OK: 'OK', NEXT: 'Naprej', SELECTED: '%U izbrano', MAZE_NAMES: ['Brez labirinta', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    uk: { NEW_GAME: 'Нова гра', CONTINUE: 'Продовжити', LEVEL: 'Рівень', MAZES: 'Лабіринти', TOP_SCORE: 'Рекорд', INSTRUCTIONS: 'Інструкція', OPTIONS: 'Налаштування', GAME_SOUNDS: 'Звук гри', KEY_TONES: 'Звук клавіш', VIBRATION: 'Вібрація', LANGUAGE: 'Мова', ON: 'Увімк.', OFF: 'Вимк.', SYSTEM: 'Система', SELECT: 'Обрати', OK: 'OK', NEXT: 'Далі', SELECTED: '%U вибрано', MAZE_NAMES: ['Без лабіринту', 'Лаб. 1', 'Лаб. 2', 'Лаб. 3', 'Лаб. 4', 'Лаб. 5'] },
+    ar: { NEW_GAME: 'لعبة جديدة', CONTINUE: 'متابعة', LEVEL: 'المستوى', MAZES: 'المتاهات', TOP_SCORE: 'أعلى نتيجة', INSTRUCTIONS: 'التعليمات', OPTIONS: 'الإعدادات', GAME_SOUNDS: 'صوت اللعبة', KEY_TONES: 'نغمة المفاتيح', VIBRATION: 'اهتزاز', LANGUAGE: 'اللغة', ON: 'تشغيل', OFF: 'إيقاف', SYSTEM: 'النظام', SELECT: 'اختيار', OK: 'موافق', NEXT: 'التالي', SELECTED: '%U محدد', MAZE_NAMES: ['بلا متاهة', 'متاهة 1', 'متاهة 2', 'متاهة 3', 'متاهة 4', 'متاهة 5'] },
+    'zh-tw': { NEW_GAME: '新遊戲', CONTINUE: '繼續', LEVEL: '等級', MAZES: '迷宮', TOP_SCORE: '最高分', INSTRUCTIONS: '說明', OPTIONS: '設定', GAME_SOUNDS: '遊戲音效', KEY_TONES: '按鍵音', VIBRATION: '震動', LANGUAGE: '語言', ON: '開', OFF: '關', SYSTEM: '系統', SELECT: '選擇', OK: '確定', NEXT: '下一步', SELECTED: '已選%U', MAZE_NAMES: ['無迷宮', '迷宮 1', '迷宮 2', '迷宮 3', '迷宮 4', '迷宮 5'] },
+    tl: { NEW_GAME: 'Bagong laro', CONTINUE: 'Magpatuloy', LEVEL: 'Antas', MAZES: 'Mga labirinto', TOP_SCORE: 'Pinakamataas', INSTRUCTIONS: 'Panuto', OPTIONS: 'Opsyon', GAME_SOUNDS: 'Tunog ng laro', KEY_TONES: 'Tunog ng susi', VIBRATION: 'Panginginig', LANGUAGE: 'Wika', ON: 'Bukas', OFF: 'Patay', SYSTEM: 'Sistema', SELECT: 'Piliin', OK: 'OK', NEXT: 'Susunod', SELECTED: 'Pinili: %U', MAZE_NAMES: ['Walang labirinto', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    id: { NEW_GAME: 'Permainan baru', CONTINUE: 'Lanjutkan', LEVEL: 'Level', MAZES: 'Labirin', TOP_SCORE: 'Skor tertinggi', INSTRUCTIONS: 'Petunjuk', OPTIONS: 'Opsi', GAME_SOUNDS: 'Suara game', KEY_TONES: 'Bunyi tombol', VIBRATION: 'Getar', LANGUAGE: 'Bahasa', ON: 'Aktif', OFF: 'Mati', SYSTEM: 'Sistem', SELECT: 'Pilih', OK: 'OK', NEXT: 'Berikut', SELECTED: '%U dipilih', MAZE_NAMES: ['Tanpa labirin', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    ms: { NEW_GAME: 'Permainan baru', CONTINUE: 'Teruskan', LEVEL: 'Tahap', MAZES: 'Labirin', TOP_SCORE: 'Skor tertinggi', INSTRUCTIONS: 'Arahan', OPTIONS: 'Tetapan', GAME_SOUNDS: 'Bunyi permainan', KEY_TONES: 'Nada kekunci', VIBRATION: 'Getaran', LANGUAGE: 'Bahasa', ON: 'Hidup', OFF: 'Mati', SYSTEM: 'Sistem', SELECT: 'Pilih', OK: 'OK', NEXT: 'Seterusnya', SELECTED: '%U dipilih', MAZE_NAMES: ['Tanpa labirin', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    vi: { NEW_GAME: 'Trò chơi mới', CONTINUE: 'Tiếp tục', LEVEL: 'Cấp độ', MAZES: 'Mê cung', TOP_SCORE: 'Điểm cao', INSTRUCTIONS: 'Hướng dẫn', OPTIONS: 'Tùy chọn', GAME_SOUNDS: 'Âm thanh', KEY_TONES: 'Âm phím', VIBRATION: 'Rung', LANGUAGE: 'Ngôn ngữ', ON: 'Bật', OFF: 'Tắt', SYSTEM: 'Hệ thống', SELECT: 'Chọn', OK: 'OK', NEXT: 'Tiếp', SELECTED: 'Đã chọn %U', MAZE_NAMES: ['Không mê cung', 'Mê cung 1', 'Mê cung 2', 'Mê cung 3', 'Mê cung 4', 'Mê cung 5'] },
+    th: { NEW_GAME: 'เกมใหม่', CONTINUE: 'เล่นต่อ', LEVEL: 'ระดับ', MAZES: 'เขาวงกต', TOP_SCORE: 'คะแนนสูงสุด', INSTRUCTIONS: 'วิธีเล่น', OPTIONS: 'ตั้งค่า', GAME_SOUNDS: 'เสียงเกม', KEY_TONES: 'เสียงปุ่ม', VIBRATION: 'สั่น', LANGUAGE: 'ภาษา', ON: 'เปิด', OFF: 'ปิด', SYSTEM: 'ระบบ', SELECT: 'เลือก', OK: 'ตกลง', NEXT: 'ถัดไป', SELECTED: 'เลือก %U แล้ว', MAZE_NAMES: ['ไม่มีเขาวงกต', 'เขาวงกต 1', 'เขาวงกต 2', 'เขาวงกต 3', 'เขาวงกต 4', 'เขาวงกต 5'] },
+    hi: { NEW_GAME: 'नया खेल', CONTINUE: 'जारी रखें', LEVEL: 'स्तर', MAZES: 'भूलभुलैया', TOP_SCORE: 'उच्च स्कोर', INSTRUCTIONS: 'निर्देश', OPTIONS: 'विकल्प', GAME_SOUNDS: 'खेल की ध्वनि', KEY_TONES: 'कुंजी ध्वनि', VIBRATION: 'कंपन', LANGUAGE: 'भाषा', ON: 'चालू', OFF: 'बंद', SYSTEM: 'सिस्टम', SELECT: 'चुनें', OK: 'ठीक', NEXT: 'आगे', SELECTED: '%U चुना गया', MAZE_NAMES: ['बिना भूलभुलैया', 'भूल. 1', 'भूल. 2', 'भूल. 3', 'भूल. 4', 'भूल. 5'] },
+    'zh-cn': { NEW_GAME: '新游戏', CONTINUE: '继续', LEVEL: '等级', MAZES: '迷宫', TOP_SCORE: '最高分', INSTRUCTIONS: '说明', OPTIONS: '设置', GAME_SOUNDS: '游戏音效', KEY_TONES: '按键音', VIBRATION: '震动', LANGUAGE: '语言', ON: '开', OFF: '关', SYSTEM: '系统', SELECT: '选择', OK: '确定', NEXT: '下一步', SELECTED: '已选%U', MAZE_NAMES: ['无迷宫', '迷宫 1', '迷宫 2', '迷宫 3', '迷宫 4', '迷宫 5'] },
+    he: { NEW_GAME: 'משחק חדש', CONTINUE: 'המשך', LEVEL: 'רמה', MAZES: 'מבוכים', TOP_SCORE: 'שיא', INSTRUCTIONS: 'הוראות', OPTIONS: 'אפשרויות', GAME_SOUNDS: 'צליל משחק', KEY_TONES: 'צליל מקשים', VIBRATION: 'רטט', LANGUAGE: 'שפה', ON: 'פועל', OFF: 'כבוי', SYSTEM: 'מערכת', SELECT: 'בחר', OK: 'אישור', NEXT: 'הבא', SELECTED: '%U נבחר', MAZE_NAMES: ['בלי מבוך', 'מבוך 1', 'מבוך 2', 'מבוך 3', 'מבוך 4', 'מבוך 5'] },
+    et: { NEW_GAME: 'Uus mäng', CONTINUE: 'Jätka', LEVEL: 'Tase', MAZES: 'Labürindid', TOP_SCORE: 'Rekord', INSTRUCTIONS: 'Juhised', OPTIONS: 'Seaded', GAME_SOUNDS: 'Mängu heli', KEY_TONES: 'Klahviheli', VIBRATION: 'Vibratsioon', LANGUAGE: 'Keel', ON: 'Sees', OFF: 'Väljas', SYSTEM: 'Süsteem', SELECT: 'Vali', OK: 'OK', NEXT: 'Järgmine', SELECTED: '%U valitud', MAZE_NAMES: ['Labürindita', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    lv: { NEW_GAME: 'Jauna spēle', CONTINUE: 'Turpināt', LEVEL: 'Līmenis', MAZES: 'Labirinti', TOP_SCORE: 'Rekords', INSTRUCTIONS: 'Instrukcija', OPTIONS: 'Iestatījumi', GAME_SOUNDS: 'Spēles skaņa', KEY_TONES: 'Taustiņu skaņa', VIBRATION: 'Vibrācija', LANGUAGE: 'Valoda', ON: 'Iesl.', OFF: 'Izsl.', SYSTEM: 'Sistēma', SELECT: 'Izvēlēties', OK: 'OK', NEXT: 'Tālāk', SELECTED: '%U izvēlēts', MAZE_NAMES: ['Bez labirinta', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    lt: { NEW_GAME: 'Naujas žaidimas', CONTINUE: 'Tęsti', LEVEL: 'Lygis', MAZES: 'Labirintai', TOP_SCORE: 'Rekordas', INSTRUCTIONS: 'Instrukcija', OPTIONS: 'Nustatymai', GAME_SOUNDS: 'Žaidimo garsas', KEY_TONES: 'Mygtukų garsas', VIBRATION: 'Vibracija', LANGUAGE: 'Kalba', ON: 'Įjungta', OFF: 'Išjungta', SYSTEM: 'Sistema', SELECT: 'Rinktis', OK: 'Gerai', NEXT: 'Toliau', SELECTED: '%U pasirinkta', MAZE_NAMES: ['Be labirinto', 'Lab. 1', 'Lab. 2', 'Lab. 3', 'Lab. 4', 'Lab. 5'] },
+    cs: { NEW_GAME: 'Nová hra', CONTINUE: 'Pokračovat', LEVEL: 'Úroveň', MAZES: 'Bludiště', TOP_SCORE: 'Rekord', INSTRUCTIONS: 'Návod', OPTIONS: 'Nastavení', GAME_SOUNDS: 'Zvuk hry', KEY_TONES: 'Tóny kláves', VIBRATION: 'Vibrace', LANGUAGE: 'Jazyk', ON: 'Zap', OFF: 'Vyp', SYSTEM: 'Systém', SELECT: 'Vybrat', OK: 'OK', NEXT: 'Další', SELECTED: '%U vybráno', MAZE_NAMES: ['Bez bludiště', 'Blud. 1', 'Blud. 2', 'Blud. 3', 'Blud. 4', 'Blud. 5'] }
+  };
+
+  Object.keys(MENU_TRANSLATIONS).forEach(function (code) {
+    var source = MENU_TRANSLATIONS[code];
+    var pack = PACKS[code] || {};
+    for (var i = 0; i < MENU_KEYS.length; i++) pack[MENU_KEYS[i]] = source[MENU_KEYS[i]];
+    PACKS[code] = pack;
+  });
+
   function baseCode(value) {
     if (typeof value !== 'string') return null;
-    var match = value.trim().toLowerCase().match(/^([a-z]{2,3})(?:[-_]|$)/);
+    var normalized = value.trim().toLowerCase().replace(/_/g, '-');
+    var match = normalized.match(/^([a-z]{2,3})(?:-([a-z0-9]{2,8}))?(?:-|$)/);
     if (!match) return null;
     var code = match[1];
+    var region = match[2] ? code + '-' + match[2] : null;
+    if (region === 'zh-hant' || region === 'zh-tw' || region === 'zh-hk' || region === 'zh-mo') return 'zh-tw';
+    if (region === 'zh-hans' || region === 'zh-cn' || region === 'zh-sg') return 'zh-cn';
+    if (region && PACKS[region]) return region;
+    if (code === 'nb' || code === 'nn') code = 'no';
+    if (code === 'fil') code = 'tl';
+    if (code === 'iw') code = 'he';
+    if (code === 'in') code = 'id';
+    if (code === 'zh') code = 'zh-cn';
     return PACKS[code] ? code : null;
   }
 
@@ -118,6 +188,10 @@
     return baseCode(choice) || 'en';
   }
 
+  function fontPack(choice) {
+    return FONT_PACKS[resolve(choice)] || 'B';
+  }
+
   function text(key, choice, params) {
     var code = resolve(choice);
     var value = (PACKS[code] && PACKS[code][key] !== undefined) ? PACKS[code][key] : English[key];
@@ -136,6 +210,7 @@
     detect: detect,
     resolve: resolve,
     text: text,
+    fontPack: fontPack,
     languageName: function (code) {
       code = resolve(code);
       for (var i = 0; i < LANGUAGES.length; i++) if (LANGUAGES[i].code === code) return LANGUAGES[i].name;

@@ -16,13 +16,13 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 
 ## Versions at a glance
 
-| | v1.0, 2021 | v2.0, 2026 | v2.1, 2026 |
-| --- | --- | --- | --- |
-| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program | v2.0 plus decoded game/key tones, vibration, Options, eight languages and autosave |
-| Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones and a firmware dump | The same sources, plus browser input and storage behavior |
-| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` | [`web/`](web), tag `v2.1` |
-| Run it | [Run the 2021 build](#run-the-2021-build) | historical browser edition | open `web/index.html` ([details](#play-v21)) |
-| The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) |
+| | v1.0, 2021 | v2.0, 2026 | v2.1.0, 2026 | v2.1.2, 2026 |
+| --- | --- | --- | --- | --- |
+| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program | v2.0 plus decoded game/key tones, vibration, Options, eight languages and autosave | v2.1 with Nokia bitmap fonts and menus in all 36 listed PPM languages |
+| Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones and a firmware dump | The same sources, plus browser input and storage behavior | The same sources, plus recovered language fonts and the supplied PPM language chart |
+| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` | [`web/`](web), tag `v2.1.0` | [`web/`](web), tag `v2.1.2` |
+| Run it | [Run the 2021 build](#run-the-2021-build) | Historical browser edition | Historical browser edition | [Open the latest browser edition](#play-v212) |
+| The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) |
 
 | When | What |
 | --- | --- |
@@ -31,10 +31,12 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 | 12 Nov 2026 | First browser port of the Java code |
 | 13 Nov 2026 | The browser edition is rebuilt as a recreation of the real game: tag `v2.0` |
 | 13 Nov 2026 | The v2.1 browser release adds firmware-decoded tones, autosave, Options, localization and mobile controls |
+| 13 Nov 2026 | v2.1.1 work replaces the partial font tables with Nokia firmware bitmaps |
+| 13 Nov 2026 | v2.1.2 adds translated menus for all 36 languages in the supplied v6.39 PPM chart |
 
 The 2021 files are exactly as they were uploaded: `git diff v1.0 -- "Snake II" "Snake II Nokia 3310 in Java.pdf"` is empty.
 
-## Play v2.1
+## Play v2.1.2
 
 **[▶ Play in your browser](https://gamekiller168.github.io/Snake_II/)** (GitHub Pages, deployed from `web/` whenever a push to `main` changes it).
 
@@ -285,7 +287,7 @@ The second source is the phone itself. A flash dump of the English firmware v6.3
 - the English texts of the menus (`texts.js`)
 - small pixel pictures: the start-up animation, the fonts, the fireworks and the bonus creatures (`pictures.js`)
 
-No firmware file, no program code and no table from it is in this repository. `.gitignore` keeps a `reference/` folder (firmware dumps, footage, extracted bitmap files) out of it. The pixel pictures that v2.0 does contain are typed out as text in `web/js/pictures.js`, `tiles.js` and `font.js`; see [Credits and legal](#credits-and-legal).
+No full firmware image or program code is in this repository. The font bitmaps extracted from PPM packs A, B, C, D, E, I, J and O are included in `web/js/fontpacks.js`; `.gitignore` keeps firmware dumps, footage and intermediate exports out of it. The other pixel pictures are typed out as text in `web/js/pictures.js`, `tiles.js` and `font.js`; see [Credits and legal](#credits-and-legal).
 
 ### Proof: replaying the real program
 
@@ -313,13 +315,13 @@ What keeps that honest is checking, not trust: every claim has an evidence tag, 
 <sub>The page around the display: the function keys and the keypad for touch screens.</sub>
 </p>
 
-### What is still open in v2.1
+### What is still open in v2.1.2
 
 Not everything is known yet. [`web/FIDELITY.md`](web/FIDELITY.md) lists every element with what it rests on and what would settle the estimates. The main gaps:
 
 - the sound scripts, DTMF table and vibration events are decoded from firmware; the browser's oscillator waveform, gain and a few browser-key-to-DTMF mappings are estimates
 - the special bonus item is not in v2.0: the program rolls for it, but it is switched off in the phone and never appeared in any footage
-- a few glyphs of the large font (0 3 5 6 c s), the small-font completions and accents, and the curved tick are manually drawn from existing Nokia glyphs or soft footage and remain estimates; the icon of the top score note is missing
+- the v2.1.2 working branch adds 36 translated menus; complex scripts use browser font shaping where the supplied PPM tables cannot be mapped reliably. The curved tick remains estimated and the top-score note icon is missing
 - the scrollbar is reconstructed from the available crops; its thumb height follows the visible-window ratio and its travel follows the list's top line
 - bonus creatures 0 and 3 match the program's picture but were never seen on a real phone, and the mazes were checked against the program but not yet against footage
 
@@ -327,18 +329,18 @@ If you own an English Nokia 3310: footage that is straight on, close, in focus, 
 
 ## The code
 
-v2.1 continues the v2.0 browser recreation. The 2021 Java remake remains unchanged:
+v2.1.2 continues the v2.0 browser recreation. The 2021 Java remake remains unchanged:
 
 - `web/js/engine.js`, `rng.js`, `config.js`: the game logic, written by hand from the rules of the phone's program and tested against it.
 - `web/js/tiles.js`, `scene.js`, `font.js`: the pictures of the game (snake, apple, bonus creatures, score), read from filmed frames of real phones and checked against 183 measured frames and against the program's pictures.
-- `web/js/phone.js`, `screens.js`, `text.js`, `pictures.js`, `texts.js`, `i18n.js`: the phone around the game, eight language packs, Options and the estimated Nokia-style accent glyphs.
+- `web/js/phone.js`, `screens.js`, `text.js`, `fontpacks.js`, `pictures.js`, `texts.js`, `i18n.js`: the phone around the game, 36 menu languages, Options, matching PPM bitmap packs and script shaping for special alphabets.
 - `web/js/tones.js`, `audio.js`: firmware-decoded sound scripts and DTMF frequencies scheduled with Web Audio; waveform and gain remain estimates.
 - `web/js/lcd.js`, `input.js`, `main.js`, `store.js`, `save.js`, `framebuffer.js`, `index.html`, `css/`: the LCD painter, physical-key mappings, pressed buttons, local persistence and storage notice.
 
 ```
 Snake II/                          the 2021 Java Swing sources (tag v1.0, never modified)
 Snake II Nokia 3310 in Java.pdf    the 2021 write-up (Hungarian)
-web/                               v2.1, the browser edition: no build, no dependencies
+web/                               v2.1.2, the browser edition: no build, no dependencies
   index.html, css/, js/            the page and the game
   tests/                           the tests and their fixtures (recorded numbers, measured LCD states)
   FIDELITY.md                      the evidence ledger
@@ -353,21 +355,21 @@ LICENSE                            MIT, for the code and the text (what it does 
 
 ## Credits and legal
 
-The Java remake and the 2021 write-up are the author's (Hunor, GameKiller168); so are the choice of footage and firmware and the decisions about what to publish. The v2.0 browser edition was built with Claude (Anthropic); v2.1 was completed with Codex (OpenAI). The four clips in the footage table belong to their makers and are not part of this repository.
+The Java remake and the 2021 write-up are the author's (Hunor, GameKiller168); so are the choice of footage and firmware and the decisions about what to publish. The v2.0 browser edition was built with Claude (Anthropic); v2.1 was completed with Codex (OpenAI), and v2.1.2 menu localization is in progress. The four clips in the footage table belong to their makers and are not part of this repository.
 
 The pictures on this page are in `docs/img`. The title picture, the figures and the page images are cut from the 2021 PDF; the screens and the GIF were captured from the v2.0 build (the GIF is a bot playing). No frame from the third-party clips is used.
 
-Snake II and the Nokia 3310 belong to their rights holders. This is an unofficial fan recreation, made to preserve how the game looked and behaved; it is not affiliated with or endorsed by them. The small pixel pictures in v2.0 (start-up animation, fonts, fireworks, bonus creatures) are copies of Nokia's artwork at 84 x 48 resolution. The title picture at the top of this page, which is also the cover of the 2021 PDF, is the phone's start-up artwork as well. That is where Nokia's work lives in this repository. No firmware file, program code or table from the firmware is in it.
+Snake II and the Nokia 3310 belong to their rights holders. This is an unofficial fan recreation, made to preserve how the game looked and behaved; it is not affiliated with or endorsed by them. The pixel pictures and bitmap fonts in the browser app are Nokia artwork extracted from or compared with firmware. The title picture at the top of this page, which is also the cover of the 2021 PDF, is the phone's start-up artwork as well. No full firmware image or program code is included.
 
 ### License
 
 The code of this repository, that is the 2021 Java sources in `Snake II/` and the browser edition in `web/`, and the text of this page and of `web/FIDELITY.md` are under the [MIT License](LICENSE).
 
-The MIT License does not cover Nokia's work: the pixel pictures and texts taken from the phone (`web/js/pictures.js`, `tiles.js`, `font.js`, `texts.js`) and the LCD states measured from footage (`web/tests/fixtures/phone-states.json`); the title picture, which is the cover of the 2021 PDF and is also in `docs/img/hero.png` and `docs/img/pdf-page-1.jpg`; and the screens and the GIF in `docs/img` that show these pictures. They belong to their rights holders and are in this repository only as part of the unofficial recreation described above.
+The MIT License does not cover Nokia's work: the pixel pictures and texts taken from the phone (`web/js/pictures.js`, `fontpacks.js`, `tiles.js`, `font.js`, `texts.js`) and the LCD states measured from footage (`web/tests/fixtures/phone-states.json`); the title picture, which is the cover of the 2021 PDF and is also in `docs/img/hero.png` and `docs/img/pdf-page-1.jpg`; and the screens and the GIF in `docs/img` that show these pictures. They belong to their rights holders and are in this repository only as part of the unofficial recreation described above.
 
 ## Magyarul
 
-Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.1` a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya, eredeti hangszekvenciák, automatikus mentés, Options és nyolc nyelv.
+Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.1.2` fejlesztői ág a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya, eredeti hangszekvenciák, automatikus mentés, Options és a v6.39 PPM táblázatában szereplő 36 nyelvre fordított menü.
 
 A 2026-os fejlesztés MI-vel (Claude) készült. A képek és az időzítések valódi telefonokról készült videókból vannak mérve, a szabályok a telefon firmware-éből kiolvasva és kézzel újraírva, a játékmotort pedig 84 rögzített beszélgetéssel teszteljük a telefon saját programjával szemben. Hogy melyik elem mire épül (a telefon programja, videó vagy becslés), azt a [`web/FIDELITY.md`](web/FIDELITY.md) tartalmazza.
 

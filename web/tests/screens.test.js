@@ -31,19 +31,16 @@ test('the large font has every glyph of the game over and top score notes', () =
   });
 });
 
-test('the large font lacks the glyphs of the maze notes: those lines fall back to the bold font', () => {
-  // M z t l and N were not on the footage; the notes "Maze n selected" and "No maze selected" are drawn bold [EST]
-  ['Maze 3', 'No maze', 'selected'].forEach((s) => assert.equal(Text.canDrawLarge(s), false, s));
-  assert.equal(Text.drawNoteLine(blank(), 'Maze 3', 0, 3), 'bold');
+test('the full PPM large font draws the maze notes without a small-font fallback', () => {
+  ['Maze 3', 'No maze', 'selected'].forEach((s) => assert.equal(Text.canDrawLarge(s), true, s));
+  assert.equal(Text.drawNoteLine(blank(), 'Maze 3', 0, 3), 'large');
   assert.equal(Text.drawNoteLine(blank(), 'Game over!', 0, 3), 'large');
 });
 
-test('the glyphs of the large font that are estimates are exactly 0 3 5 6 c s', () => {
-  assert.deepEqual(Object.keys(Pictures.LARGE_EST).sort(), ['0', '3', '5', '6', 'c', 's']);
-  Object.keys(Pictures.LARGE_EST).forEach((ch) => assert.ok(Pictures.LARGE[ch], ch));
-  assert.deepEqual(Text.estimatedGlyphs('Your score:'), ['s', 'c']);
+test('the complete English large font replaces the old hand-drawn estimates', () => {
+  assert.deepEqual(Text.estimatedGlyphs('Your score:'), []);
   assert.deepEqual(Text.estimatedGlyphs('1247 89'), []);
-  assert.deepEqual(Text.estimatedGlyphs('0356'), ['0', '3', '5', '6']);
+  assert.deepEqual(Text.estimatedGlyphs('0356'), []);
 });
 
 test('every large glyph is a clean rectangle: 11 rows, only the p goes down to 13', () => {
@@ -119,9 +116,10 @@ test('wrapLarge breaks at spaces, greedily, and never splits a word', () => {
   assert.deepEqual(Text.wrapLarge('a\n\nb', 100), ['a', '', 'b']);
 });
 
-test('glyphs that are in neither table count 8 columns when wrapping [EST]', () => {
-  assert.equal(Text.widthLargeEst('M'), 8);
-  assert.equal(Text.widthLargeEst('Mz'), 16);
+test('large PPM glyph widths are used when wrapping notes', () => {
+  assert.equal(Text.canDrawLarge('Mz'), true);
+  assert.equal(Text.widthLargeEst('M'), Text.widthLarge('M'));
+  assert.equal(Text.widthLargeEst('Mz'), Text.widthLarge('Mz'));
   assert.equal(Text.widthLargeEst('1'), Text.widthLarge('1'));
 });
 

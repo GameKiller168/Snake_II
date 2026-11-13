@@ -1,6 +1,6 @@
-# v2.1 fidelity ledger
+# v2.1.2 fidelity ledger
 
-Goal: the browser edition recreates Snake II as it runs on a real Nokia 3310 (English firmware v6.39). This file says, element by element, what each part rests on. Whatever is an estimate is marked as one, here and in the code (`[EST]`), and is replaced as soon as better evidence exists. The v2.1 browser-only features are not part of the original phone; their approximations are identified below.
+Goal: the browser edition recreates Snake II as it runs on a real Nokia 3310 (firmware v6.39). This file says, element by element, what each part rests on. Whatever is an estimate is marked as one, here and in the code (`[EST]`), and is replaced as soon as better evidence exists. The v2.1 browser-only features are not part of the original phone; their approximations are identified below.
 
 ## Evidence tags
 
@@ -15,7 +15,7 @@ Where footage and program could be compared (step time of level 1, bonus counter
 
 ## Where the facts come from
 
-Four recordings of real phones, shared by Hunor, and the firmware of the 3310. All of it was used for analysis only. The recordings and the firmware stay out of the repository (`reference/` is git-ignored); what was read from the recordings is in it as numbers, for example the 183 LCD states of `tests/fixtures/phone-states.json`.
+Four recordings of real phones, shared by Hunor, and the firmware of the 3310. The recordings and full firmware images stay out of the repository (`reference/` is git-ignored); the browser includes extracted bitmap glyphs from PPM packs A, B, C, D, E, I, J and O in `js/fontpacks.js`. What was read from the recordings is also stored as numbers, for example the 183 LCD states of `tests/fixtures/phone-states.json`.
 
 | Clip | What it is | Used for |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ Four recordings of real phones, shared by Hunor, and the firmware of the 3310. A
 | C | "Snake 2 Original ... ASMR - Handheld Gameplayer", real sound | sound context; v2.1 tones are decoded from firmware, and the LCD is too small to read pixels |
 | D | "Snake II on Nokia 3310 (4K) - JAVA Mobile Games", Russian UI, close-up, 1920 x 1080, 308 s | menus, level screen, maze list, "maze selected" note; only what does not depend on the language |
 
-Firmware: the English v6.39 flash dump of the 3310 (MCU and PPM). No firmware file, no program code and no table from it is in the repository. What it contributed is of three kinds: numbers and rules that were written down by hand and re-implemented (`config.js`, `engine.js`, `rng.js`), the English texts (`texts.js`), and small pixel pictures (start-up animation, fonts, fireworks, bonus creatures). **The pixel pictures are copies of Nokia's artwork at 84 x 48 resolution**; wherever footage exists they were compared with it, and the pictures of the game itself are in addition checked against the program's own picture (see "Tests"); what neither covers is marked "FW only" in the tables. That is the one place where Nokia's work lives in this repository.
+Firmware: the English v6.39 flash dump and the v6.39 PPM language packs of the 3310 (MCU and PPM). No full firmware image or program code is in the repository. What it contributed is of four kinds: numbers and rules that were written down by hand and re-implemented (`config.js`, `engine.js`, `rng.js`), the English texts (`texts.js`), bitmap fonts from PPM A/B/C/D/E/I/J/O (`fontpacks.js`), and small pixel pictures (start-up animation, fireworks, bonus creatures). **The pixel pictures are copies of Nokia's artwork at 84 x 48 resolution**; wherever footage exists they were compared with it, and the pictures of the game itself are in addition checked against the program's own picture (see "Tests"); what neither covers is marked "FW only" in the tables.
 
 ## Game logic
 
@@ -72,13 +72,10 @@ The game's sound scripts and the DTMF table were decoded from the English v6.39 
 | Score and counter digits | 3 x 5 in boxes 4 wide, score at columns 0..15, counter at 75..82, creature icon at columns 66..73 | VIDEO | the "1" is 2 pixels wide |
 | Start-up animation | 2700 ms: base picture, four rectangles in turn at 250 ms steps, then the base picture again | FW, VIDEO, PHONE | compared with footage frame by frame |
 | Fireworks | six pictures, 230 ms each, shown twice (2760 ms), after a game with a new top score | FW, PHONE | pictures identified in A by correlation; step time measured there |
-| Bold font | menu items, soft keys, labels | FW, VIDEO | the characters of the menu texts were checked in footage; other glyphs of the font are FW only |
-| Small-font completion | missing ASCII glyphs drawn to match the measured font | **EST** | used only where the English firmware font has no character for a localized label |
-| Accents | accent pixels added over the nearest base glyph in the Nokia small font | **EST** | manually designed for the supported European translations; not copied from a Nokia language bitmap |
-| Thin font | the instruction pages | **FW only** | no footage shows an instruction page in English |
-| Menu numbers in the header | digits 1 2 3 4 5 8 and "-" | VIDEO | digit 6 is **EST** (never filmed; shows when the cursor is on the 6th item of a list) |
-| Large font of the notes | 11 rows (13 for "p"), one empty column after each glyph, space 3 wide, "R" 8 wide | VIDEO | measured: `! 1 2 4 7 8 : C E G O P R S T a d e m o p r u v` (+- 1 pixel); **weaker: `9` and `Y`** (read from sheared frames); **EST: `0 3 5 6 c s`** (drawn after the pattern of the measured glyphs, listed in `LARGE_EST` so that they can be replaced) |
-| Note lines whose glyphs are missing | drawn in the bold font on the baseline of the large font | EST | `M z t l L N` were not on the footage, so "Maze n selected" and "No maze selected" are bold lines |
+| Small fonts | menu items, soft keys, labels and instruction pages | FW, VIDEO | complete small-bold and small-plain tables from PPM A, B, C, D, E, I, J and O; shared basic Latin uses B, while supported locale packs supply their glyphs |
+| Localized small-font glyphs | full characters from the selected PPM language pack | FW | supported European scripts use recovered PPM bitmaps; Arabic, Hebrew, Chinese, Thai, Hindi and missing Vietnamese glyphs use browser text shaping at the 84 x 48 display size because the supplied special-layout PPM tables do not map reliably to Unicode |
+| Menu numbers in the header | digits and their spacing | FW, VIDEO | digits come from PPM B's `tinyplain` font; the hyphen remains a two-pixel line |
+| Large font of the notes | glyphs and advances from the PPM `largebold` fonts | FW, VIDEO | basic Latin comes from PPM B and localized glyphs from the active decoded locale pack; a line uses small bold only when its large glyph is absent |
 | "Maze n selected" icon | dotted box in the upper right corner, curved tick drawn into it | box, place and timing VIDEO (D, +- 2 pixels); tick silhouette traced from a soft screenshot and still **EST** | box appears with the note, the tick starts after 700 ms and takes 5 steps of 65 ms |
 | Top score note icon | **not reproduced**: the footage shows an animated dotted picture in the upper right corner of this note (B), v2 shows none | - | |
 
@@ -90,7 +87,7 @@ Measured in footage unless it says otherwise.
 | --- | --- | --- | --- |
 | Main menu | New game, Level, Mazes, Top score, Instructions, Options; "Continue" in front while a game is paused | VIDEO, FW for original items; **EST** for Options | Options was not found in the original Snake II menu |
 | Options | Game sound, Key tone, Vibration and Language; each setting can be changed and is stored | EST | browser-only submenu |
-| Languages | English, Hungarian, Romanian, German, Slovak, Polish, French and Spanish; default follows browser language | EST | translations are not read from the firmware's other language packs |
+| Languages | All 36 unique languages listed for PPM A-J and O in the supplied v6.39 chart; default follows browser language | EST | menu translations are app text; locale selection chooses the matching recovered PPM where available, and browser shaping covers special scripts that the PPM decoder cannot reliably map |
 | Lists | circular; a window of three lines; the state is two numbers, the item on the top line and the item with the cursor. Down: the cursor moves on, and when it would leave the window the window follows so that the cursor is on the bottom line; up: the window follows so that the cursor is on the top line; lists of up to three items do not scroll | VIDEO (B, D) | the model reproduces every move seen in B and D |
 | The two numbers of the main menu | live on through the level screen, the instructions, the maze list and a pause | VIDEO (B, D) | |
 | After a game over and after the top score note | the cursor is on the first item, the top line stays as it was | VIDEO (B, D) | based on few events |
@@ -119,7 +116,7 @@ Measured in footage unless it says otherwise.
 | Storage notice | an in-flow English notice explains that local storage keeps the game and top score on this device | browser-only | it can be dismissed and remembers the acknowledgement if storage works |
 | Hidden tab | the game clock stops while the page is hidden and one frame never advances it by more than 250 ms |
 
-## Not in v2.1
+## Not in v2.1.2
 
 - The special bonus item (see "Game logic").
 - The icon of the top score note.
@@ -127,7 +124,7 @@ Measured in footage unless it says otherwise.
 
 ## Tests
 
-`cd web && npm test` runs 385 tests, nothing to install. There is no build step: GitHub Pages copies the static `web/` files.
+`cd web && npm test` runs the existing test suite, nothing to install. There is no build step: GitHub Pages copies the static `web/` files.
 
 - `tests/oracle.test.js`: 84 conversations with the real program (26 846 messages over all nine levels and all six mazes, with deliberate crashes, turns in the grace time, bonus creatures of all six kinds eaten and expired, snakes that wrap around the end of the program's ring buffer) and 440 placement cases for the two random placement routines. After every message the engine must give the same return code, delays, event code and score, and the CRC-32 of the complete 84 x 48 picture of the game as `scene.js` draws it (frame, walls, snake, apple, creature, score, counter). The fixtures hold numbers only (`traces.json`, `placement.json`); they were recorded by running the program in an emulator with a bot playing. Nothing of the program is in them.
 - `tests/tiles.test.js`: 183 frames measured in B (snake, apple, bonus creature, 38 of them with a bonus counter) against the picture library, bit for bit (`phone-states.json`).

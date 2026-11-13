@@ -1,6 +1,7 @@
 {
   "name": "snake-ii-web",
   "private": true,
+  "license": "MIT",
   "description": "Snake II in the browser - dependency-free, no build step",
   "scripts": {
     "test": "node --test",

@@ -1,2 +1,18 @@
-# Reference material from the real phone (firmware dumps, footage, extracted bitmaps) stays local.
+# Reference material from the real phone (firmware dumps, footage, extracted bitmap files) stays local.
 reference/
+
+# Dependencies and logs
+node_modules/
+*.log
+
+# Editor and system leftovers
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Backups and local configuration
+*.bak
+*.orig
+.env
+.env.*

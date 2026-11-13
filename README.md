@@ -4,7 +4,7 @@
 
 Taking a Nokia 3310 classic apart, twice: a hand-built Java remake in 2021, and in 2026 a browser edition that is checked, message by message, against the phone's own program.
 
-[Play it](#play-v20) · [2021: the Java remake](#2021-the-java-remake) · [2026: reading the real game](#2026-reading-the-real-game) · [Evidence ledger](web/FIDELITY.md)
+[▶ Play it now](https://gamekiller168.github.io/snake_ii/) · [How to play](#play-v20) · [2021: the Java remake](#2021-the-java-remake) · [2026: reading the real game](#2026-reading-the-real-game) · [Evidence ledger](web/FIDELITY.md)
 
 <img src="docs/img/hero.png" width="380" alt="The Snake II title picture of the Nokia 3310, black on LCD green, with the caption Nokia 3310 - Snake II in Java"> <img src="docs/img/v2-gameplay.gif" width="380" alt="The browser edition v2.0: start-up animation, main menu and a few seconds of play with a bonus creature">
 
@@ -34,6 +34,10 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 The 2021 files are exactly as they were uploaded: `git diff v1.0 -- "Snake II" "Snake II Nokia 3310 in Java.pdf"` is empty.
 
 ## Play v2.0
+
+**[▶ Play in your browser](https://gamekiller168.github.io/snake_ii/)** (GitHub Pages, deployed from `web/` on every push to `main`).
+
+Or run it locally:
 
 No build step, no dependencies, no server code: plain HTML, CSS and JavaScript.
 
@@ -253,7 +257,7 @@ Where footage and program could be compared (the step time of level 1, the bonus
 
 ### Source 1: gameplay footage
 
-Four recordings of real phones were measured frame by frame. Titles and names are as they appear in the file names of the clips; no frame from them is stored in this repository.
+Four recordings of real phones were measured frame by frame. Titles and names are as they appear in the file names of the clips. No video and no video frame from them is stored in this repository; what was read from clip B is kept as numbers, the 183 LCD states of 84 x 48 pixels in [`web/tests/fixtures/phone-states.json`](web/tests/fixtures/phone-states.json), which are the test data of the picture library.
 
 | Clip | What it is | Used for |
 | --- | --- | --- |
@@ -278,7 +282,7 @@ The second source is the phone itself. A flash dump of the English firmware v6.3
 - the English texts of the menus (`texts.js`)
 - small pixel pictures: the start-up animation, the fonts, the fireworks and the bonus creatures (`pictures.js`)
 
-No firmware file, no program code and no table from it is in this repository. `.gitignore` keeps a `reference/` folder (firmware dumps, footage, extracted bitmaps) out of it.
+No firmware file, no program code and no table from it is in this repository. `.gitignore` keeps a `reference/` folder (firmware dumps, footage, extracted bitmap files) out of it. The pixel pictures that v2.0 does contain are typed out as text in `web/js/pictures.js`, `tiles.js` and `font.js`; see [Credits and legal](#credits-and-legal).
 
 ### Proof: replaying the real program
 
@@ -331,9 +335,11 @@ Snake II/                          the 2021 Java Swing sources (tag v1.0, never 
 Snake II Nokia 3310 in Java.pdf    the 2021 write-up (Hungarian)
 web/                               v2.0, the browser edition: no build, no dependencies
   index.html, css/, js/            the page and the game
-  tests/                           the tests and their fixtures (numbers only)
+  tests/                           the tests and their fixtures (recorded numbers, measured LCD states)
   FIDELITY.md                      the evidence ledger
 docs/img/                          the pictures on this page
+.github/workflows/pages.yml        publishes web/ to GitHub Pages
+LICENSE                            MIT, for the code and the text (what it does not cover: see Credits and legal)
 ```
 
 ### Tests
@@ -348,6 +354,12 @@ The pictures on this page are in `docs/img`. The title picture, the figures and 
 
 Snake II and the Nokia 3310 belong to their rights holders. This is an unofficial fan recreation, made to preserve how the game looked and behaved; it is not affiliated with or endorsed by them. The small pixel pictures in v2.0 (start-up animation, fonts, fireworks, bonus creatures) are copies of Nokia's artwork at 84 x 48 resolution. The title picture at the top of this page, which is also the cover of the 2021 PDF, is the phone's start-up artwork as well. That is where Nokia's work lives in this repository. No firmware file, program code or table from the firmware is in it.
 
+### License
+
+The code of this repository, that is the 2021 Java sources in `Snake II/` and the browser edition in `web/`, and the text of this page and of `web/FIDELITY.md` are under the [MIT License](LICENSE).
+
+The MIT License does not cover Nokia's work: the pixel pictures and texts taken from the phone (`web/js/pictures.js`, `tiles.js`, `font.js`, `texts.js`) and the LCD states measured from footage (`web/tests/fixtures/phone-states.json`); the title picture, which is the cover of the 2021 PDF and is also in `docs/img/hero.png` and `docs/img/pdf-page-1.jpg`; and the screens and the GIF in `docs/img` that show these pictures. They belong to their rights holders and are in this repository only as part of the unofficial recreation described above.
+
 ## Magyarul
 
 Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.0` a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya (labirintus), a telefon szabályai.
@@ -355,3 +367,5 @@ Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es J
 A 2026-os fejlesztés MI-vel (Claude) készült. A képek és az időzítések valódi telefonokról készült videókból vannak mérve, a szabályok a telefon firmware-éből kiolvasva és kézzel újraírva, a játékmotort pedig 84 rögzített beszélgetéssel teszteljük a telefon saját programjával szemben. Hogy melyik elem mire épül (a telefon programja, videó vagy becslés), azt a [`web/FIDELITY.md`](web/FIDELITY.md) tartalmazza.
 
 Megnyitás: `web/index.html`, vagy statikus szerver (`cd web && python3 -m http.server 8080`). Nyilak / WASD a kígyóhoz, Enter vagy Szóköz a középső gomb, Backspace / Esc / C a C gomb (játék közben szünet). Hang egyelőre nincs.
+
+Licenc: a kód (a 2021-es Java-források és a `web/`) és a szövegek MIT licenc alatt állnak ([`LICENSE`](LICENSE)); a Nokia művei ebbe nem tartoznak bele, részletek a „Credits and legal” szakasz „License” részében.

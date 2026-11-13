@@ -164,7 +164,7 @@
     if (exact) return exact;
     var other = font === 'B' ? 'A' : 'B';
     return FONTS[font][ch] || accentedGlyph(FONTS[font], ch) || FONTS[other][ch] || accentedGlyph(FONTS[other], ch) ||
-      SMALL_EST[ch] || accentedGlyph(SMALL_EST, ch) || FONTS[font]['?'];
+      SMALL_EST[ch] || accentedGlyph(SMALL_EST, ch) || MISSING_GLYPH;
   }
 
   function accentPixels(mark, w, h) {
@@ -213,6 +213,7 @@
   }
 
   var FONTS = { A: parseSmall(Pictures.FONT_A), B: parseSmall(Pictures.FONT_B) };
+  var MISSING_GLYPH = { w: 5, a: 6, rows: ['#####', '#...#', '#...#', '#...#', '#...#', '#...#', '#####', '.....'] };
   // The English firmware font omits letters it never needs. These Nokia-style completions are EST glyphs.
   var SMALL_EST = parseSmall({
     '-': '...../...../...../#####/...../...../...../.....',
@@ -250,6 +251,7 @@
     if (requiresBrowserText(font, str)) {
       var measured = browserTextWidth(str, font);
       if (measured !== null) return measured;
+      return Math.ceil(str.length * 4) + 1;
     }
     var w = 0;
     for (var i = 0; i < str.length; i++) {
@@ -261,7 +263,7 @@
   }
 
   function canDraw(font, str) {
-    if (requiresBrowserText(font, str) && browserTextContext()) return true;
+    if (requiresBrowserText(font, str)) return true;
     for (var i = 0; i < str.length; i++) {
       if (!glyphOf(font, str.charAt(i))) return false;
     }

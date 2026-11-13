@@ -128,13 +128,16 @@
     return state;
   }
 
-  function drawScrollBar(fb, n, c) {
+  function drawScrollBar(fb, n, state) {
     var top = LIST_TOP, bottom = LIST_TOP + LINES * LINE_H - 1;      // rows 7..36
     fb.vline(81, top, bottom - top + 1);
     fb.hline(81, top, 2);
     fb.hline(81, bottom, 2);
-    var t = LIST_TOP + Math.floor(c * 23 / (n - 1));                 // the thumb follows the cursor item
-    fb.vline(83, t, 7);
+    var trackHeight = bottom - top + 1;
+    var thumbHeight = Math.ceil(trackHeight * Math.min(LINES, n) / n);
+    var travel = trackHeight - thumbHeight;
+    var t = top + (n > 1 ? Math.round(state.s * travel / (n - 1)) : 0);
+    fb.vline(83, t, thumbHeight);
   }
 
   /**
@@ -150,24 +153,29 @@
       var selected = i === menu.c;
       if (selected) fb.fillRect(0, y0, BAR_W, LINE_H, 1);
       Text.draw(fb, 'B', menu.items[i], 2, y0 + 1, selected);
+      if (menu.values && menu.values[i]) {
+        var valueWidth = Text.width('B', menu.values[i]);
+        var valueX = BAR_W - valueWidth;
+        if (valueX > 2 + Text.width('B', menu.items[i]) + 1) Text.draw(fb, 'B', menu.values[i], valueX, y0 + 1, selected);
+      }
     }
-    drawScrollBar(fb, n, menu.c);
+    drawScrollBar(fb, n, menu);
     drawSoftKey(fb, menu.softKey);
     return fb;
   }
 
   // ----- level ---------------------------------------------------------------------------------------------------------------
 
-  function drawLevel(fb, level) {
+  function drawLevel(fb, level, levelLabel, okLabel) {
     fb.clear();
-    Text.draw(fb, 'B', Texts.LEVEL_LABEL, 6, 0, false);
+    Text.draw(fb, 'B', levelLabel || Texts.LEVEL_LABEL, 6, 0, false);
     for (var k = 1; k <= 9; k++) {
       var x0 = 8 * (k - 1);
       fb.hline(x0 + 7, 36, 5);                                  // base
       fb.vline(x0 + 11, 32 - 2 * k, 4 + 2 * k);                 // right edge, rows (32 - 2k) .. 35
       if (k <= level) fb.fillRect(x0 + 6, 31 - 2 * k, 4, 4 + 2 * k);   // filled block, rows (31 - 2k) .. 34
     }
-    drawSoftKey(fb, Texts.OK);
+    drawSoftKey(fb, okLabel || Texts.OK);
     return fb;
   }
 
@@ -222,21 +230,24 @@
 
   // ----- instruction pages ------------------------------------------------------------------------------------------
 
-  var pagesCache = null;
-  function instructionPages() {
-    if (!pagesCache) {
-      var lines = Text.wrap('A', Texts.INSTRUCTION_TEXT, PAGE_WIDTH);
-      pagesCache = [];
-      for (var i = 0; i < lines.length; i += PAGE_TOP.length) pagesCache.push(lines.slice(i, i + PAGE_TOP.length));
+  var pagesCache = Object.create(null);
+  function instructionPages(body) {
+    body = body || Texts.INSTRUCTION_TEXT;
+    if (!pagesCache[body]) {
+      var lines = Text.wrap('A', body, PAGE_WIDTH);
+      var pages = [];
+      for (var i = 0; i < lines.length; i += PAGE_TOP.length) pages.push(lines.slice(i, i + PAGE_TOP.length));
+      pagesCache[body] = pages;
     }
-    return pagesCache;
+    return pagesCache[body];
   }
 
-  function drawInstructions(fb, page) {
+  function drawInstructions(fb, page, body, nextLabel, accented) {
     fb.clear();
-    var lines = instructionPages()[page];
-    for (var i = 0; i < lines.length; i++) Text.draw(fb, 'A', lines[i], PAGE_X, PAGE_TOP[i], false);
-    drawSoftKey(fb, Texts.NEXT);
+    var lines = instructionPages(body)[page] || [];
+    var top = accented ? [7, 18, 29] : PAGE_TOP;
+    for (var i = 0; i < lines.length; i++) Text.draw(fb, 'A', lines[i], PAGE_X, top[i], false);
+    drawSoftKey(fb, nextLabel || Texts.NEXT);
     return fb;
   }
 

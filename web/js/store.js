@@ -35,7 +35,7 @@
    */
   function createStore(backend) {
     if (backend === undefined) backend = defaultBackend();
-    var data = { level: Config.DEFAULT_LEVEL, maze: 1, top: 0 };
+    var data = { level: Config.DEFAULT_LEVEL, maze: 1, top: 0, gameSounds: true, keyTones: true, vibration: true, language: null };
 
     function load() {
       if (!backend) return;
@@ -46,6 +46,10 @@
         data.level = clampInt(o.level, 1, 9, data.level);
         data.maze = clampInt(o.maze, 1, 6, data.maze);
         data.top = clampInt(o.top, 0, 0x7fffffff, 0);
+        if (typeof o.gameSounds === 'boolean') data.gameSounds = o.gameSounds;
+        if (typeof o.keyTones === 'boolean') data.keyTones = o.keyTones;
+        if (typeof o.vibration === 'boolean') data.vibration = o.vibration;
+        if (o.language === null || typeof o.language === 'string') data.language = o.language;
       } catch (e) {
         /* unreadable: start from the defaults */
       }
@@ -68,7 +72,11 @@
       get maze() { return data.maze; },
       set maze(v) { data.maze = clampInt(v, 1, 6, data.maze); save(); },
       get top() { return data.top; },
-      set top(v) { data.top = clampInt(v, 0, 0x7fffffff, data.top); save(); }
+      set top(v) { data.top = clampInt(v, 0, 0x7fffffff, data.top); save(); },
+      get gameSounds() { return data.gameSounds; }, set gameSounds(v) { if (typeof v === 'boolean') { data.gameSounds = v; save(); } },
+      get keyTones() { return data.keyTones; }, set keyTones(v) { if (typeof v === 'boolean') { data.keyTones = v; save(); } },
+      get vibration() { return data.vibration; }, set vibration(v) { if (typeof v === 'boolean') { data.vibration = v; save(); } },
+      get language() { return data.language; }, set language(v) { if (v === null || typeof v === 'string') { data.language = v; save(); } }
     };
   }
 

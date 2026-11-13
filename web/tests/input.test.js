@@ -56,6 +56,31 @@ test('other keys are none of the phone\'s business', () => {
   });
 });
 
+test('physical numpad positions map consistently in and out of the game', () => {
+  const map = { Numpad8: ['2', 'scrollUp'], Numpad2: ['8', 'scrollDown'], Numpad4: ['4', null],
+    Numpad6: ['6', null], Numpad5: ['select', 'select'], NumpadEnter: ['select', 'select'],
+    Numpad7: ['1', null], Numpad9: ['3', null], Numpad1: ['7', null], Numpad3: ['9', null],
+    NumpadDecimal: [null, null], NumpadAdd: [null, null] };
+  Object.keys(map).forEach((code) => {
+    assert.equal(Input.keyForEvent({ key: code, code }, true), map[code][0], code + ' in game');
+    assert.equal(Input.keyForEvent({ key: code, code }, false), map[code][1], code + ' out of game');
+  });
+  assert.equal(Input.keyForEvent({ key: 'ArrowUp', code: 'Numpad8' }, true), '2');
+  assert.equal(Input.keyForEvent({ key: 'ArrowUp', code: 'Numpad8' }, false), 'scrollUp');
+});
+
+test('physical WASD positions override keyboard layout and digit row stays unchanged', () => {
+  const map = { KeyW: ['2', 'scrollUp'], KeyA: ['4', null], KeyS: ['8', 'scrollDown'], KeyD: ['6', null] };
+  Object.keys(map).forEach((code) => {
+    assert.equal(Input.keyForEvent({ key: 'z', code }, true), map[code][0]);
+    assert.equal(Input.keyForEvent({ key: 'z', code }, false), map[code][1]);
+  });
+  for (let d = 1; d <= 9; d++) {
+    assert.equal(Input.keyForEvent({ key: String(d), code: 'Digit' + d }, true), String(d));
+    assert.equal(Input.keyForEvent({ key: String(d), code: 'Digit' + d }, false), null);
+  }
+});
+
 // ----- the listeners, with a stand-in for the page -----------------------------------------------------------------------------
 
 function withPage(fn) {
@@ -117,6 +142,7 @@ test('whether a key steers or scrolls is asked at the moment of the key', () => 
     const got = [];
     Input.attach({ inGame: () => inGame, onPress: (k) => got.push(k) });
     doc.fire('keydown', keyEvent('ArrowUp'));
+    doc.fire('keyup', keyEvent('ArrowUp'));
     inGame = true;
     doc.fire('keydown', keyEvent('ArrowUp'));
     assert.deepEqual(got, ['scrollUp', '2']);
@@ -160,5 +186,36 @@ test('the pad ignores presses that are not on a key', () => {
     Input.attach({ inGame: () => false, onPress: (k) => got.push(k), pad });
     handlers.pointerdown({ target: { closest: () => null }, preventDefault() { throw new Error('must not be prevented'); } });
     assert.deepEqual(got, []);
+  });
+});
+
+test('keyboard press and release pair, repeat and modifiers do not create extra presses', () => {
+  withPage((doc) => {
+    const got = [], released = [];
+    Input.attach({ inGame: () => true, onPress: (k) => got.push(k), onRelease: (k) => released.push(k) });
+    doc.fire('keydown', keyEvent('ArrowUp', { code: 'ArrowUp' }));
+    doc.fire('keydown', keyEvent('ArrowUp', { code: 'ArrowUp', repeat: true }));
+    doc.fire('keydown', keyEvent('ArrowUp', { code: 'ArrowUp', ctrlKey: true }));
+    assert.deepEqual(got, ['2']);
+    doc.fire('keyup', keyEvent('ArrowUp', { code: 'ArrowUp' }));
+    assert.deepEqual(released, ['2']);
+  });
+});
+
+test('keyboard down class and blur release held keys', () => {
+  withPage((doc) => {
+    const winHandlers = {}, classes = new Set(), released = [];
+    const button = { getAttribute: () => '2', classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c) } };
+    const pad = { addEventListener() {}, querySelector: () => button };
+    const had = Object.prototype.hasOwnProperty.call(globalThis, 'window'), old = globalThis.window;
+    globalThis.window = { addEventListener(type, f) { winHandlers[type] = f; } };
+    try {
+      Input.attach({ inGame: () => true, onPress() {}, onRelease: (k) => released.push(k), pad });
+      doc.fire('keydown', keyEvent('ArrowUp', { code: 'ArrowUp' }));
+      assert.ok(classes.has('down'));
+      winHandlers.blur();
+      assert.ok(!classes.has('down'));
+      assert.deepEqual(released, ['2']);
+    } finally { if (had) globalThis.window = old; else delete globalThis.window; }
   });
 });

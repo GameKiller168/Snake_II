@@ -257,7 +257,7 @@ Where footage and program could be compared (the step time of level 1, the bonus
 
 ### Source 1: gameplay footage
 
-Four recordings of real phones were measured frame by frame. Titles and names are as they appear in the file names of the clips; no frame from them is stored in this repository.
+Four recordings of real phones were measured frame by frame. Titles and names are as they appear in the file names of the clips. No video and no video frame from them is stored in this repository; what was read from clip B is kept as numbers, the 183 LCD states of 84 x 48 pixels in [`web/tests/fixtures/phone-states.json`](web/tests/fixtures/phone-states.json), which are the test data of the picture library.
 
 | Clip | What it is | Used for |
 | --- | --- | --- |
@@ -282,7 +282,7 @@ The second source is the phone itself. A flash dump of the English firmware v6.3
 - the English texts of the menus (`texts.js`)
 - small pixel pictures: the start-up animation, the fonts, the fireworks and the bonus creatures (`pictures.js`)
 
-No firmware file, no program code and no table from it is in this repository. `.gitignore` keeps a `reference/` folder (firmware dumps, footage, extracted bitmaps) out of it.
+No firmware file, no program code and no table from it is in this repository. `.gitignore` keeps a `reference/` folder (firmware dumps, footage, extracted bitmap files) out of it. The pixel pictures that v2.0 does contain are typed out as text in `web/js/pictures.js`, `tiles.js` and `font.js`; see [Credits and legal](#credits-and-legal).
 
 ### Proof: replaying the real program
 
@@ -335,9 +335,10 @@ Snake II/                          the 2021 Java Swing sources (tag v1.0, never 
 Snake II Nokia 3310 in Java.pdf    the 2021 write-up (Hungarian)
 web/                               v2.0, the browser edition: no build, no dependencies
   index.html, css/, js/            the page and the game
-  tests/                           the tests and their fixtures (numbers only)
+  tests/                           the tests and their fixtures (recorded numbers, measured LCD states)
   FIDELITY.md                      the evidence ledger
 docs/img/                          the pictures on this page
+.github/workflows/pages.yml        publishes web/ to GitHub Pages
 ```
 
 ### Tests

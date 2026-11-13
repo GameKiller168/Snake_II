@@ -15,7 +15,7 @@ Where footage and program could be compared (step time of level 1, bonus counter
 
 ## Where the facts come from
 
-Four recordings of real phones, shared by Hunor, and the firmware of the 3310. All of it was used for analysis only and stays out of the repository (`reference/` is git-ignored).
+Four recordings of real phones, shared by Hunor, and the firmware of the 3310. All of it was used for analysis only. The recordings and the firmware stay out of the repository (`reference/` is git-ignored); what was read from the recordings is in it as numbers, for example the 183 LCD states of `tests/fixtures/phone-states.json`.
 
 | Clip | What it is | Used for |
 | --- | --- | --- |

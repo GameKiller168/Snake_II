@@ -81,18 +81,21 @@ test('the main menu is a circle with a three line window (VIDEO B)', () => {
     'New game | Level | *Mazes',
     'Level | Mazes | *Top score',
     'Mazes | Top score | *Instructions',
-    'Top score | Instructions | *New game',
-    'Instructions | New game | *Level'
+    'Top score | Instructions | *Options',
+    'Instructions | Options | *New game'
   ]);
 });
 
 test('up from the first item wraps to the last and puts it on the top line (VIDEO B)', () => {
   const ph = phone();
   ph.press('scrollUp');
-  assert.deepEqual(window3(ph), ['*Instructions', 'New game', 'Level']);
+  assert.deepEqual(window3(ph), ['*Options', 'New game', 'Level']);
+  assert.equal(ph.header(), '8-1-6');
+  ph.press('scrollUp');
+  assert.deepEqual(window3(ph), ['*Instructions', 'Options', 'New game']);
   assert.equal(ph.header(), '8-1-5');
   ph.press('scrollUp');
-  assert.deepEqual(window3(ph), ['*Top score', 'Instructions', 'New game']);
+  assert.deepEqual(window3(ph), ['*Top score', 'Instructions', 'Options']);
   assert.equal(ph.header(), '8-1-4');
   ph.press('scrollUp');
   assert.deepEqual(window3(ph), ['*Mazes', 'Top score', 'Instructions']);
@@ -271,7 +274,7 @@ test('choosing a maze throws a paused game away: Continue disappears, the cursor
   assert.equal(ph.paused, false);
   ph.advance(1500);
   assert.equal(ph.mode, 'menu');
-  assert.deepEqual(ph.menu.items, ['New game', 'Level', 'Mazes', 'Top score', 'Instructions']);
+  assert.deepEqual(ph.menu.items, ['New game', 'Level', 'Mazes', 'Top score', 'Instructions', 'Options']);
   assert.equal(ph.menu.state.c, 3);                       // the number did not change: it is "Top score" now
   assert.equal(ph.menu.items[ph.menu.state.c], 'Top score');
 });
@@ -284,11 +287,47 @@ test('without a paused game the cursor stays on Mazes after the note', () => {
   assert.equal(ph.menu.items[ph.menu.state.c], 'Mazes');
 });
 
+test('Options saves sound toggles and the selected interface language', () => {
+  const store = Store.create(null);
+  const ph = new Phone({ store, rng: new Rng(5), skipSplash: true });
+  let changed = null;
+  ph.onLanguageChange = (language) => { changed = language; };
+  press(ph, 'scrollDown scrollDown scrollDown scrollDown scrollDown select');
+  assert.equal(ph.menu.kind, 'options');
+  assert.deepEqual(ph.menu.values.slice(0, 3), ['On', 'On', 'On']);
+  press(ph, 'select scrollDown select scrollDown select scrollDown select');
+  assert.equal(store.gameSounds, false);
+  assert.equal(store.keyTones, false);
+  assert.equal(store.vibration, false);
+  assert.equal(ph.menu.kind, 'language');
+  assert.equal(ph.menu.items[ph.menu.state.c], 'System');
+  press(ph, 'scrollDown scrollDown select');
+  assert.equal(store.language, 'hu');
+  assert.equal(changed, 'hu');
+  assert.equal(ph.menu.kind, 'options');
+  assert.equal(ph.menu.items[0], 'Játékhang');
+  assert.equal(ph.menu.values[3], 'HU');
+});
+
+test('phone forwards game events once and keeps vibration separate from sound', () => {
+  const ph = phone();
+  ph.startGame();
+  const events = [];
+  ph.onEvent = (name) => events.push(name);
+  ph.game.tick = function () {
+    if (this.events.length === 0) this.events.push('eat', 'vibra');
+    return 0x21;
+  };
+  ph.onTick();
+  ph.onTick();
+  assert.deepEqual(events, ['eat', 'vibration']);
+});
+
 // ----- how a game ends ---------------------------------------------------------------------------------------------------------
 
 function crashingGame() {
   const ph = phone({ maze: 2 });                      // "Maze 1": a frame of walls, the snake runs into the right wall
-  press(ph, 'scrollDown scrollDown scrollDown scrollDown scrollDown');   // around the circle back to New game
+  press(ph, 'scrollDown scrollDown scrollDown scrollDown scrollDown scrollDown');   // around the circle back to New game
   newGame(ph);
   return ph;
 }
@@ -317,7 +356,7 @@ test('a turn during the grace time saves the snake', () => {
 test('after a game over without a record the note stays 3.07 s, the menu starts on New game with the old top line', () => {
   const ph = crashingGame();
   ph.store.top = 50;
-  ph.main.s = 3;                                       // a window like Top score / Instructions / New game
+  ph.main.s = 4;                                       // a window like Instructions / Options / New game
   runUntil(ph, (p) => p.mode === 'note');
   const t0 = ph.time;
   ph.advance(3069);
@@ -325,8 +364,8 @@ test('after a game over without a record the note stays 3.07 s, the menu starts 
   ph.advance(1);
   assert.equal(ph.time - t0, 3070);
   assert.equal(ph.mode, 'menu');
-  assert.deepEqual(ph.menu.state, { s: 3, c: 0 });
-  assert.deepEqual(window3(ph), ['Top score', 'Instructions', '*New game']);
+  assert.deepEqual(ph.menu.state, { s: 4, c: 0 });
+  assert.deepEqual(window3(ph), ['Instructions', 'Options', '*New game']);
 });
 
 test('a new top score: fireworks of 12 pictures, 230 ms each, then the note with TOP SCORE', () => {
@@ -366,8 +405,8 @@ test('a score equal to the top score is no record', () => {
 test('the top score note: 3.07 s, then the main menu with the cursor on item 0 and the old top line (VIDEO B)', () => {
   const ph = phone();
   ph.store.top = 1222;
-  press(ph, 'scrollUp scrollUp');                      // Top score on the top line
-  assert.deepEqual(window3(ph), ['*Top score', 'Instructions', 'New game']);
+  press(ph, 'scrollUp scrollUp scrollUp');             // Top score on the top line
+  assert.deepEqual(window3(ph), ['*Top score', 'Instructions', 'Options']);
   ph.press('select');
   assert.equal(ph.mode, 'note');
   assert.deepEqual(ph.note.lines, ['Top score:', '1222']);
@@ -376,14 +415,14 @@ test('the top score note: 3.07 s, then the main menu with the cursor on item 0 a
   assert.equal(ph.mode, 'note');
   ph.advance(1);
   assert.equal(ph.mode, 'menu');
-  assert.deepEqual(window3(ph), ['Top score', 'Instructions', '*New game']);
+  assert.deepEqual(window3(ph), ['*New game', 'Level', 'Mazes']);
 });
 
 // ----- instructions ---------------------------------------------------------------------------------------------------------
 
 test('the instruction pages turn with Select and C leaves them', () => {
   const ph = phone();
-  press(ph, 'scrollUp select');                        // Instructions is the last item
+  press(ph, 'scrollUp scrollUp select');               // Instructions
   assert.equal(ph.mode, 'instructions');
   assert.equal(ph.page, 0);
   ph.press('select');

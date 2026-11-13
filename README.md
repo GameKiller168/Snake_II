@@ -4,7 +4,7 @@
 
 Taking a Nokia 3310 classic apart, twice: a hand-built Java remake in 2021, and in 2026 a browser edition that is checked, message by message, against the phone's own program.
 
-[▶ Play it now](https://gamekiller168.github.io/Snake_II/) · [How to play](#play-v20) · [2021: the Java remake](#2021-the-java-remake) · [2026: reading the real game](#2026-reading-the-real-game) · [Evidence ledger](web/FIDELITY.md)
+[▶ Play it now](https://gamekiller168.github.io/Snake_II/) · [How to play](#play-v21) · [2021: the Java remake](#2021-the-java-remake) · [2026: reading the real game](#2026-reading-the-real-game) · [Evidence ledger](web/FIDELITY.md)
 
 <img src="docs/img/hero.png" width="380" alt="The Snake II title picture of the Nokia 3310, black on LCD green, with the caption Nokia 3310 - Snake II in Java"> <img src="docs/img/v2-gameplay.gif" width="380" alt="The browser edition v2.0: start-up animation, main menu and a few seconds of play with a bonus creature">
 
@@ -16,13 +16,13 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 
 ## Versions at a glance
 
-| | v1.0, 2021 | v2.0, 2026 |
-| --- | --- | --- |
-| What it is | A Java Swing remake of Snake II with the Nokia look | The game of the real Nokia 3310 in a browser: start-up animation, menus, nine levels, six mazes and the rules of the phone |
-| Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones and a firmware dump, with an AI assistant, tested against the real program |
-| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` |
-| Run it | [Run the 2021 build](#run-the-2021-build) | open `web/index.html` ([details](#play-v20)) |
-| The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) |
+| | v1.0, 2021 | v2.0, 2026 | v2.1, 2026 |
+| --- | --- | --- | --- |
+| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program | v2.0 plus decoded game/key tones, vibration, Options, eight languages and autosave |
+| Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones and a firmware dump | The same sources, plus browser input and storage behavior |
+| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` | [`web/`](web), tag `v2.1` |
+| Run it | [Run the 2021 build](#run-the-2021-build) | historical browser edition | open `web/index.html` ([details](#play-v21)) |
+| The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) |
 
 | When | What |
 | --- | --- |
@@ -30,10 +30,11 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 | 13 Sep 2021 | The Java sources and the PDF are uploaded: tag `v1.0` |
 | 12 Nov 2026 | First browser port of the Java code |
 | 13 Nov 2026 | The browser edition is rebuilt as a recreation of the real game: tag `v2.0` |
+| 13 Nov 2026 | The v2.1 browser release adds firmware-decoded tones, autosave, Options, localization and mobile controls |
 
 The 2021 files are exactly as they were uploaded: `git diff v1.0 -- "Snake II" "Snake II Nokia 3310 in Java.pdf"` is empty.
 
-## Play v2.0
+## Play v2.1
 
 **[▶ Play in your browser](https://gamekiller168.github.io/Snake_II/)** (GitHub Pages, deployed from `web/` whenever a push to `main` changes it).
 
@@ -52,16 +53,18 @@ The page is a phone: the display, the four function keys and the keypad. On a to
 
 | | Keyboard | Phone key |
 | --- | --- | --- |
-| Steer the snake | arrow keys, W A S D or the digit keys | 2, 4, 6, 8 (1, 3, 7, 9 turn the snake by 90 degrees towards that corner) |
-| Scroll a menu | up / down arrows or W / S | the two scroll keys |
-| Select | Enter or Space | the middle key |
+| Steer the snake | arrow keys, W A S D, digit row, or physical numpad (8 up, 2 down, 4 left, 6 right) | 2, 4, 6, 8 (1, 3, 7, 9 turn the snake by 90 degrees towards that corner) |
+| Scroll a menu | up / down arrows, W / S, or physical numpad 8 / 2 | the two scroll keys |
+| Select | Enter, Space, or physical numpad 5 | the middle key |
 | Back, pause | Backspace, Escape or C | the C key (in the game it pauses: the menu then starts with "Continue") |
 
-Menu: New game, Level, Mazes, Top score, Instructions. The lists are circular. Choose a level (1 to 9) and a maze ("No maze" or Maze 1 to 5) before you start; a maze chosen while a game is paused throws that game away, as on the phone.
+Menu: New game, Level, Mazes, Top score, Instructions and Options. Options controls game sound, key tones, vibration and language (English, Hungarian, Romanian, German, Slovak, Polish, French or Spanish). The initial language follows the browser setting. The lists are circular. Choose a level (1 to 9) and a maze ("No maze" or Maze 1 to 5) before you start; a maze chosen while a game is paused throws that game away, as on the phone.
 
 ### The game
 
-The field wraps around: leave on one side, come back on the other (unless a maze wall is in the way). Hitting a wall or your own body ends the game, but at the first blocked step the game waits 0.1 s for you to turn away. An apple is worth the level number in points. After every fifth apple a bonus creature appears for 20 steps; the sooner you catch it, the more it is worth. Level, maze and top score are kept in the browser (`localStorage`). There is no sound.
+The field wraps around: leave on one side, come back on the other (unless a maze wall is in the way). Hitting a wall or your own body ends the game, but at the first blocked step the game waits 0.1 s for you to turn away. An apple is worth the level number in points. After every fifth apple a bonus creature appears for 20 steps; the sooner you catch it, the more it is worth. Game state, settings and top score are saved locally in the browser. If storage is unavailable, the game continues for the current session.
+
+The game generates Nokia's eat, crash and full-field tones in Web Audio, plus DTMF key tones while a key is held. Tone frequencies and timing come from the firmware; browser loudness and waveform are implementation estimates. Supported mobile browsers vibrate for the same events as the firmware. Unsupported devices continue silently.
 
 ## 2021: the Java remake
 
@@ -224,7 +227,7 @@ In November 2026 the project went back to the same question with different tools
 
 ### What every element rests on
 
-Nothing in v2.0 is invented to fill a gap. Every element carries a tag that says what it rests on, in the code and in [`web/FIDELITY.md`](web/FIDELITY.md):
+The v2.0 recreation keeps an evidence tag for each element. v2.1 adds browser-only controls and presentation, with estimates called out in [`web/FIDELITY.md`](web/FIDELITY.md):
 
 | Tag | Meaning |
 | --- | --- |
@@ -263,7 +266,7 @@ Four recordings of real phones were measured frame by frame. Titles and names ar
 | --- | --- | --- |
 | A | "Playing Snake 2 At Full Speed" (91 Pixels), 1080 x 1920, 30 fps, 56 s, English, green LCD | the game over and top score notes, the fireworks |
 | B | "Snake II on Nokia 3310 - varjoisa", 1920 x 1080, 30 fps, 481 s, English, blue backlight, one long game at the default level | pictures of snake, apple and bonus creatures, the header, menus, notes, timings |
-| C | "Snake 2 Original ... ASMR - Handheld Gameplayer", real sound | nothing yet: v2.0 has no sound, and the display is too small in this clip to read pixels |
+| C | "Snake 2 Original ... ASMR - Handheld Gameplayer", real sound | sound context; v2.1 tone frequencies and timing are decoded from firmware, and the display is too small to read pixels |
 | D | "Snake II on Nokia 3310 (4K) - JAVA Mobile Games", 1920 x 1080, 30 fps, 308 s, Russian UI, close-up | menus, level screen, maze list, the "maze selected" note; only what does not depend on the language |
 
 What the footage gave:
@@ -310,30 +313,32 @@ What keeps that honest is checking, not trust: every claim has an evidence tag, 
 <sub>The page around the display: the function keys and the keypad for touch screens.</sub>
 </p>
 
-### What is still open
+### What is still open in v2.1
 
 Not everything is known yet. [`web/FIDELITY.md`](web/FIDELITY.md) lists every element with what it rests on and what would settle the estimates. The main gaps:
 
-- sound is not in v2.0: clip C has the real sounds, but nothing was made up instead
+- the sound scripts, DTMF table and vibration events are decoded from firmware; the browser's oscillator waveform, gain and a few browser-key-to-DTMF mappings are estimates
 - the special bonus item is not in v2.0: the program rolls for it, but it is switched off in the phone and never appeared in any footage
-- a few glyphs of the large font (0 3 5 6 c s), the tick in the "Maze n selected" note and the icon of the top score note are estimates or missing; the instruction pages come from the program only, because no footage shows them in English
+- a few glyphs of the large font (0 3 5 6 c s), the small-font completions and accents, and the curved tick are manually drawn from existing Nokia glyphs or soft footage and remain estimates; the icon of the top score note is missing
+- the scrollbar is reconstructed from the available crops; its thumb height follows the visible-window ratio and its travel follows the list's top line
 - bonus creatures 0 and 3 match the program's picture but were never seen on a real phone, and the mazes were checked against the program but not yet against footage
 
 If you own an English Nokia 3310: footage that is straight on, close, in focus, without zoom changes and at 60 fps if possible, of the points listed under "Open" in the ledger, would settle most of these.
 
 ## The code
 
-v2.0 replaces the first browser version, which was a port of the 2021 code with a design of its own. Everything in it is taken from the real thing:
+v2.1 continues the v2.0 browser recreation. The 2021 Java remake remains unchanged:
 
 - `web/js/engine.js`, `rng.js`, `config.js`: the game logic, written by hand from the rules of the phone's program and tested against it.
 - `web/js/tiles.js`, `scene.js`, `font.js`: the pictures of the game (snake, apple, bonus creatures, score), read from filmed frames of real phones and checked against 183 measured frames and against the program's pictures.
-- `web/js/phone.js`, `screens.js`, `text.js`, `pictures.js`, `texts.js`: the phone around the game (start-up animation, circular menus, level screen, maze list, notes, pause, fireworks for a new top score) on a virtual clock, with the times and positions measured in footage.
-- `web/js/lcd.js`, `input.js`, `main.js`, `store.js`, `framebuffer.js`, `index.html`, `css/`: the page: the LCD painter (pixels 10 : 12 like the real display), keys, layout, the place where level, maze and top score are kept, and the 84 x 48 bit matrix everything is drawn into first.
+- `web/js/phone.js`, `screens.js`, `text.js`, `pictures.js`, `texts.js`, `i18n.js`: the phone around the game, eight language packs, Options and the estimated Nokia-style accent glyphs.
+- `web/js/tones.js`, `audio.js`: firmware-decoded sound scripts and DTMF frequencies scheduled with Web Audio; waveform and gain remain estimates.
+- `web/js/lcd.js`, `input.js`, `main.js`, `store.js`, `save.js`, `framebuffer.js`, `index.html`, `css/`: the LCD painter, physical-key mappings, pressed buttons, local persistence and storage notice.
 
 ```
 Snake II/                          the 2021 Java Swing sources (tag v1.0, never modified)
 Snake II Nokia 3310 in Java.pdf    the 2021 write-up (Hungarian)
-web/                               v2.0, the browser edition: no build, no dependencies
+web/                               v2.1, the browser edition: no build, no dependencies
   index.html, css/, js/            the page and the game
   tests/                           the tests and their fixtures (recorded numbers, measured LCD states)
   FIDELITY.md                      the evidence ledger
@@ -344,11 +349,11 @@ LICENSE                            MIT, for the code and the text (what it does 
 
 ### Tests
 
-`cd web && node --test` (developed with Node 22, nothing to install): 358 tests. The engine against the recorded program, the picture library against measured frames, the phone on its virtual clock (start-up, menus, mazes, pause, crash, game over, fireworks), the pictures, keys and storage.
+`cd web && npm test` (Node 22, nothing to install): 385 tests. The engine against recorded program conversations, the picture library against measured frames, the phone on its virtual clock, tone scheduling, input mapping, localization, save/restore and storage behavior. There is no build step; Pages publishes the static `web/` files.
 
 ## Credits and legal
 
-The Java remake and the 2021 write-up are the author's (Hunor, GameKiller168); so are the choice of footage and firmware and the decisions about what to publish. The browser edition was built with Claude (Anthropic). The four clips in the footage table belong to their makers and are not part of this repository.
+The Java remake and the 2021 write-up are the author's (Hunor, GameKiller168); so are the choice of footage and firmware and the decisions about what to publish. The v2.0 browser edition was built with Claude (Anthropic); v2.1 was completed with Codex (OpenAI). The four clips in the footage table belong to their makers and are not part of this repository.
 
 The pictures on this page are in `docs/img`. The title picture, the figures and the page images are cut from the 2021 PDF; the screens and the GIF were captured from the v2.0 build (the GIF is a bot playing). No frame from the third-party clips is used.
 
@@ -362,10 +367,10 @@ The MIT License does not cover Nokia's work: the pixel pictures and texts taken 
 
 ## Magyarul
 
-Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.0` a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya (labirintus), a telefon szabályai.
+Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.1` a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya, eredeti hangszekvenciák, automatikus mentés, Options és nyolc nyelv.
 
 A 2026-os fejlesztés MI-vel (Claude) készült. A képek és az időzítések valódi telefonokról készült videókból vannak mérve, a szabályok a telefon firmware-éből kiolvasva és kézzel újraírva, a játékmotort pedig 84 rögzített beszélgetéssel teszteljük a telefon saját programjával szemben. Hogy melyik elem mire épül (a telefon programja, videó vagy becslés), azt a [`web/FIDELITY.md`](web/FIDELITY.md) tartalmazza.
 
-Megnyitás: `web/index.html`, vagy statikus szerver (`cd web && python3 -m http.server 8080`). Nyilak / WASD a kígyóhoz, Enter vagy Szóköz a középső gomb, Backspace / Esc / C a C gomb (játék közben szünet). Hang egyelőre nincs.
+Megnyitás: `web/index.html`, vagy statikus szerver (`cd web && python3 -m http.server 8080`). Nyilak / WASD a kígyóhoz; a fizikai numpadon 8=felfelé, 2=lefelé, 4=balra, 6=jobbra, 5=kiválasztás. Enter vagy Szóköz a középső gomb, Backspace / Esc / C a C gomb (játék közben szünet). A játékállás és a rekord böngészőben mentődik.
 
 Licenc: a kód (a 2021-es Java-források és a `web/`) és a szövegek MIT licenc alatt állnak ([`LICENSE`](LICENSE)); a Nokia művei ebbe nem tartoznak bele, részletek a „Credits and legal” szakasz „License” részében.

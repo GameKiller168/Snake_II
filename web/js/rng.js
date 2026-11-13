@@ -21,6 +21,13 @@
     return this.seed;
   };
 
+  Rng.prototype.getState = function () { return this.seed; };
+  Rng.prototype.setState = function (seed) {
+    if (typeof seed !== 'number' || seed !== Math.floor(seed) || seed < 0 || seed >= 0xfff1) return false;
+    this.seed = seed;
+    return true;
+  };
+
   /** A seed from the clock / the browser's entropy, for real games. */
   Rng.fromClock = function () {
     var s;

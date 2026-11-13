@@ -317,20 +317,23 @@ test('three lines show three items starting at the top line, around the end of t
   assert.equal(a.get(0, 27), 0);
 });
 
-test('the scroll bar: a track on the right and a thumb of 7 rows that follows the cursor item', () => {
-  const thumbTop = [7, 12, 18, 24, 30];
-  for (let c = 0; c < 5; c++) {
-    const fb = menuFrame(0, c);
-    const t = thumbTop[c];
-    for (let y = t; y < t + 7; y++) assert.equal(fb.get(83, y), 1, `c=${c} y=${y}`);
-    assert.equal(fb.get(83, t - 1), 0, `c=${c} above`);
-    assert.equal(fb.get(83, t + 7), 0, `c=${c} below`);
+test('the scroll bar scales to the visible window and follows its top line', () => {
+  const thumbTop = [7, 10, 13, 16, 19];
+  for (let s = 0; s < 5; s++) {
+    const fb = menuFrame(s, 0);
+    const t = thumbTop[s];
+    for (let y = t; y < t + 18; y++) assert.equal(fb.get(83, y), 1, `s=${s} y=${y}`);
+    assert.equal(fb.get(83, t - 1), 0, `s=${s} above`);
+    assert.equal(fb.get(83, t + 18), 0, `s=${s} below`);
     // the track
     for (let y = 7; y <= 36; y++) assert.equal(fb.get(81, y), 1);
     assert.equal(fb.get(82, 7), 1);
     assert.equal(fb.get(82, 36), 1);
     assert.equal(fb.get(82, 20), 0);
   }
+  // The cursor may move inside the same window without moving the scrollbar.
+  const first = menuFrame(1, 0), second = menuFrame(1, 2);
+  for (let y = 7; y <= 36; y++) assert.equal(first.get(83, y), second.get(83, y), `cursor row y=${y}`);
 });
 
 test('the numbers in the corner stay in rows 0..5 and columns 60..82', () => {

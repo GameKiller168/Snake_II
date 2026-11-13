@@ -119,6 +119,68 @@
     this.creature.shown = false;
   };
 
+  Game.prototype.snapshot = function () {
+    function cell(c) { return { x: c.x, y: c.y }; }
+    return {
+      level: this.level, maze: this.mazeIndex, snake: this.snake.map(function (s) {
+        return { x: s.x, y: s.y, d: s.d, fed: !!s.fed };
+      }), ringHead: this.ringHead, ringTail: this.ringTail, curdir: this.curdir, prevdir: this.prevdir,
+      pending: this.pending, grow: this.grow, fed: this.fed, crash: this.crash, blinkCount: this.blinkCount,
+      snakeHidden: this.snakeHidden, delay: this.delay, normalDelay: this.normalDelay, timer0: this.timer0,
+      code: this.code, score: this.score, over: this.over, cells: this.cells.map(cell), active: this.active,
+      progress: this.progress, creature: { shown: this.creature.shown, x: this.creature.x, y: this.creature.y, type: this.creature.type },
+      counter: this.counter, iconType: this.iconType, apple: cell(this.apple), headOpen: this.headOpen,
+      rng: this.rng && typeof this.rng.getState === 'function' ? this.rng.getState() : null
+    };
+  };
+
+  Game.restore = function (s, rng) {
+    function integer(v, lo, hi) { return typeof v === 'number' && isFinite(v) && Math.floor(v) === v && v >= lo && v <= hi; }
+    function coord(c, allowEmpty) {
+      return !!c && integer(c.x, allowEmpty ? -1 : 0, W - 1) && integer(c.y, allowEmpty ? -1 : 0, H - 1) &&
+        (allowEmpty || (c.x >= 0 && c.y >= 0)) && (c.x === -1) === (c.y === -1);
+    }
+    if (!s || !integer(s.level, 1, 9) || !integer(s.maze, 1, 6) || !Array.isArray(s.snake) || s.snake.length < 1 || s.snake.length > W * H ||
+        !Array.isArray(s.cells) || s.cells.length !== 4 || !coord(s.apple, true) ||
+        !integer(s.ringHead, 0, 298) || !integer(s.ringTail, 0, 298) || !integer(s.curdir, 0, 3) || !integer(s.prevdir, 0, 3) ||
+        !integer(s.pending, 0, 3) || !integer(s.grow, 0, 1) || !integer(s.fed, 0, 1) || !integer(s.crash, 0, 2) ||
+        !integer(s.blinkCount, 0, 10) || !integer(s.delay, 1, 60000) || !integer(s.normalDelay, 1, 60000) ||
+        !integer(s.timer0, 0, 60000) || !integer(s.code, 0, 255) || !integer(s.score, 0, 0x7fffffff) ||
+        typeof s.over !== 'boolean' || typeof s.snakeHidden !== 'boolean' || typeof s.headOpen !== 'boolean' ||
+        !integer(s.active, 0, 1) || !integer(s.progress, 0, 255) || !integer(s.counter, 0, 255) || !integer(s.iconType, -1, 5) ||
+        !s.creature || typeof s.creature.shown !== 'boolean' || !coord(s.creature, true) || !integer(s.creature.type, -1, 5) ||
+        !integer(s.rng, 0, 0xfff0) || !rng || typeof rng.setState !== 'function') return null;
+    for (var i = 0; i < s.cells.length; i++) if (!coord(s.cells[i], true)) return null;
+    for (i = 0; i < s.snake.length; i++) {
+      var q = s.snake[i];
+      if (!coord(q, false) || !integer(q.d, 0, 3) || typeof q.fed !== 'boolean') return null;
+    }
+    if (s.normalDelay !== Config.STEP_MS[s.level - 1] || s.delay > 60000) return null;
+    var g = Object.create(Game.prototype);
+    g.level = s.level; g.mazeIndex = s.maze; g.rng = rng;
+    if (!rng.setState(s.rng)) return null;
+    g.events = []; g.occ = new Uint8Array(W * H);
+    var walls = Config.MAZES[s.maze].walls;
+    for (i = 0; i < walls.length; i++) {
+      var w = walls[i], x, y;
+      if (w[1] === w[3]) for (x = w[0]; x <= w[2]; x++) g.occ[w[1] * W + x] = 1;
+      else if (w[0] === w[2] && w[1] < w[3]) for (y = w[1]; y <= w[3]; y++) g.occ[y * W + w[0]] = 1;
+    }
+    g.snake = s.snake.map(function (v) { return { x: v.x, y: v.y, d: v.d, fed: v.fed }; });
+    for (i = 0; i < g.snake.length; i++) {
+      var idx = g.snake[i].y * W + g.snake[i].x;
+      if (g.occ[idx]) return null;
+      g.occ[idx] = 1;
+    }
+    g.ringHead=s.ringHead; g.ringTail=s.ringTail; g.curdir=s.curdir; g.prevdir=s.prevdir; g.pending=s.pending;
+    g.grow=s.grow; g.fed=s.fed; g.crash=s.crash; g.blinkCount=s.blinkCount; g.snakeHidden=s.snakeHidden;
+    g.delay=s.delay; g.normalDelay=s.normalDelay; g.timer0=s.timer0; g.code=s.code; g.score=s.score; g.over=s.over;
+    g.cells=s.cells.map(function (v) { return new Cell(v.x, v.y); }); g.active=s.active; g.progress=s.progress;
+    g.creature={ shown:s.creature.shown, x:s.creature.x, y:s.creature.y, type:s.creature.type };
+    g.counter=s.counter; g.iconType=s.iconType; g.apple=new Cell(s.apple.x,s.apple.y); g.headOpen=s.headOpen;
+    return g;
+  };
+
   // ------------------------------------------------------------------------------------------------------
   // the snake
   // ------------------------------------------------------------------------------------------------------
@@ -269,6 +331,7 @@
         return RET.RECOVER;
       }
       this.events.push('vibra');
+      this.events.push('crash');
       this.crash = 2;
       this.delay = Config.CRASH_END_MS;
       this.code = 0x20;
@@ -311,6 +374,15 @@
     if (!eaten) {                        // the apple
       this.score += this.level;
       this.placeApple();
+      if (this.apple.x < 0 || this.apple.y < 0) {
+        this.score += 100;
+        this.code = 0x22;
+        this.events.push('won');
+        this.over = true;
+        this.fed = 1;
+        this.crash = 0;
+        return RET.OVER;
+      }
       if (!this.active) this.progress = (this.progress + 4) & 0xff;
       if (this.progress >= Config.BONUS_STEPS && c[0].x < 0 && c[0].y < 0) {
         if (this.spawnCreature()) this.active = 1;
@@ -327,6 +399,7 @@
     }
     this.fed = 1;
     this.code = 0x1f;
+    this.events.push('eat');
     this.crash = 0;
     return recovered ? RET.RECOVER : RET.ATE;
   };

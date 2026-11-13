@@ -34,6 +34,7 @@
     TOP_SCORE_NOTE: 'Top score:\n%N',
     GAME_OVER_TOP: 'Game over!\nTOP SCORE:\n%N',
     GAME_OVER_SCORE: 'Game over!\nYour score:\n%N',
+    YOU_WON: 'YOU WON!',
 
     INSTRUCTION_TEXT: 'Make the snake grow longer by directing it to the food. Use the keys 2, 4, 6 and 8. ' +
       'You cannot stop the snake or make it go backwards. Try not to hit the walls or the tail.'

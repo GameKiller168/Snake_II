@@ -1,0 +1,24 @@
+name: Verify web app
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/ci.yml']
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/ci.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run web tests
+        working-directory: web
+        run: npm test

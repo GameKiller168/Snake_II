@@ -29,6 +29,7 @@
   var Texts = NS.Texts || (req ? require('./texts.js') : null);
   var Screens = NS.Screens || (req ? require('./screens.js') : null);
   var Store = NS.Store || (req ? require('./store.js') : null);
+  var I18n = NS.I18n || (req ? require('./i18n.js') : null);
 
   var RET = Engine.RET;
 
@@ -58,6 +59,8 @@
     this.game = null;                    // the game in progress or paused
     this.paused = false;
     this.main = { s: 0, c: 0 };          // the numbers of the main menu: top line, cursor (they outlive every screen)
+    this.optionsState = { s: 0, c: 0 };
+    this.languageState = { s: 0, c: 0 };
     this.menu = null;                    // { kind: 'main' | 'mazes', items, state: { s, c } }
     this.levelShown = this.store.level;
     this.page = 0;
@@ -65,8 +68,15 @@
     this.dueTick = Infinity;
     this.dueBlink = Infinity;
     this.blinksLeft = 0;
+    this.resumeTickMs = null;
+    this.resumeBlinkMs = null;
+    this.resumeBlinksLeft = 0;
     this.lastGameOver = null;            // { score, top } of the last game, for tests and the page
     this.listeners = [];
+    this.eventCursor = 0;
+    this.onEvent = null;
+    this.onChange = null;
+    this.onLanguageChange = null;
     if (options.skipSplash) this.showMain();
   }
 
@@ -105,6 +115,7 @@
         else this.onTick();
         break;
     }
+    try { if (typeof this.onChange === 'function') this.onChange(); } catch (ignore) {}
   };
 
   Phone.prototype.setMode = function (mode) {
@@ -115,9 +126,55 @@
   // ----- menu ----------------------------------------------------------------------------------------------------------
 
   Phone.prototype.mainItems = function () {
-    var items = [Texts.NEW_GAME, Texts.LEVEL, Texts.MAZES, Texts.TOP_SCORE, Texts.INSTRUCTIONS];
-    if (this.paused) items.unshift(Texts.CONTINUE);
+    var items = [this.t('NEW_GAME'), this.t('LEVEL'), this.t('MAZES'), this.t('TOP_SCORE'), this.t('INSTRUCTIONS'), this.t('OPTIONS')];
+    if (this.paused) items.unshift(this.t('CONTINUE'));
     return items;
+  };
+
+  Phone.prototype.t = function (key, params) {
+    return I18n.text(key, this.store.language, params);
+  };
+
+  Phone.prototype.mazeNames = function () {
+    return this.t('MAZE_NAMES');
+  };
+
+  Phone.prototype.optionItems = function () {
+    return [
+      this.t('GAME_SOUNDS'), this.t('KEY_TONES'), this.t('VIBRATION'), this.t('LANGUAGE')
+    ];
+  };
+
+  Phone.prototype.optionValues = function () {
+    return [
+      this.t(this.store.gameSounds ? 'ON' : 'OFF'),
+      this.t(this.store.keyTones ? 'ON' : 'OFF'),
+      this.t(this.store.vibration ? 'ON' : 'OFF'),
+      this.store.language ? this.store.language.toUpperCase() : this.t('SYSTEM')
+    ];
+  };
+
+  Phone.prototype.languageItems = function () {
+    return [this.t('SYSTEM')].concat(I18n.LANGUAGES.map(function (language) { return language.name; }));
+  };
+
+  Phone.prototype.showOptions = function (cursor) {
+    this.setMode('menu');
+    if (cursor !== undefined) this.optionsState.c = cursor;
+    this.menu = { kind: 'options', items: this.optionItems(), values: this.optionValues(), state: this.optionsState };
+    Screens.fit(this.optionsState, this.menu.items.length);
+  };
+
+  Phone.prototype.showLanguages = function () {
+    var index = 0;
+    if (this.store.language) {
+      for (var i = 0; i < I18n.LANGUAGES.length; i++) {
+        if (I18n.LANGUAGES[i].code === this.store.language) { index = i + 1; break; }
+      }
+    }
+    this.languageState = { s: index, c: index };
+    this.setMode('menu');
+    this.menu = { kind: 'language', items: this.languageItems(), state: this.languageState };
   };
 
   /**
@@ -142,33 +199,51 @@
   Phone.prototype.header = function () {
     var m = this.menu;
     if (m.kind === 'mazes') return '8-1-' + (this.paused ? 4 : 3) + '-' + (m.state.c + 1);
+    if (m.kind === 'options') return '8-1-' + (this.paused ? 7 : 6) + '-' + (m.state.c + 1);
+    if (m.kind === 'language') return '8-1-' + (this.paused ? 7 : 6) + '-4-' + (m.state.c + 1);
     return '8-1-' + (m.state.c + 1);
   };
 
   Phone.prototype.menuSelect = function () {
     var m = this.menu;
     var c = m.state.c;
+    if (m.kind === 'options') {
+      if (c === 0) this.store.gameSounds = !this.store.gameSounds;
+      else if (c === 1) this.store.keyTones = !this.store.keyTones;
+      else if (c === 2) this.store.vibration = !this.store.vibration;
+      else { this.showLanguages(); return; }
+      this.showOptions(c);
+      return;
+    }
+    if (m.kind === 'language') {
+      this.store.language = c === 0 ? null : I18n.LANGUAGES[c - 1].code;
+      this.showOptions(3);
+      if (typeof this.onLanguageChange === 'function') this.onLanguageChange(I18n.resolve(this.store.language));
+      return;
+    }
     if (m.kind === 'mazes') {
       this.store.maze = c + 1;
       // a paused game does not survive a maze change: "Continue" is gone from the main menu, the numbers stay [VIDEO D]
       this.game = null;
       this.paused = false;
-      this.showNote(Screens.noteLines(Texts.SELECTED, { u: Texts.MAZE_NAMES[c] }, Screens.ICON_TEXT_WIDTH),
+      this.showNote(Screens.noteLines(this.t('SELECTED'), { u: this.mazeNames()[c] }, Screens.ICON_TEXT_WIDTH),
         this.showMain.bind(this), { ms: TIMING.MAZE_NOTE_MS, icon: true });
       return;
     }
     var item = m.items[c];
-    if (item === Texts.CONTINUE) this.resume();
-    else if (item === Texts.NEW_GAME) this.startGame();
-    else if (item === Texts.LEVEL) { this.levelShown = this.store.level; this.setMode('level'); }
-    else if (item === Texts.MAZES) {
+    if (item === this.t('CONTINUE')) this.resume();
+    else if (item === this.t('NEW_GAME')) this.startGame();
+    else if (item === this.t('LEVEL')) { this.levelShown = this.store.level; this.setMode('level'); }
+    else if (item === this.t('MAZES')) {
       // the list opens with the maze in use on the top line and under the cursor [VIDEO D]
       var cur = this.store.maze - 1;
-      this.menu = { kind: 'mazes', items: Texts.MAZE_NAMES, state: { s: cur, c: cur } };
-      Screens.fit(this.menu.state, Texts.MAZE_NAMES.length);
-    } else if (item === Texts.TOP_SCORE) {
-      this.showNote(Screens.noteLines(Texts.TOP_SCORE_NOTE, { n: this.store.top }), this.showMain.bind(this, 0));
-    } else if (item === Texts.INSTRUCTIONS) { this.page = 0; this.setMode('instructions'); }
+      var mazeNames = this.mazeNames();
+      this.menu = { kind: 'mazes', items: mazeNames, state: { s: cur, c: cur } };
+      Screens.fit(this.menu.state, mazeNames.length);
+    } else if (item === this.t('TOP_SCORE')) {
+      this.showNote(Screens.noteLines(this.t('TOP_SCORE_NOTE'), { n: this.store.top }), this.showMain.bind(this, 0));
+    } else if (item === this.t('INSTRUCTIONS')) { this.page = 0; this.setMode('instructions'); }
+    else if (item === this.t('OPTIONS')) this.showOptions(0);
   };
 
   // ----- notes -------------------------------------------------------------------------------------------------------
@@ -194,18 +269,25 @@
   Phone.prototype.startGame = function () {
     this.paused = false;
     this.game = new Engine.Game({ level: this.store.level, maze: this.store.maze, rng: this.rng });
+    this.eventCursor = 0;
     this.setMode('game');
     this.blinksLeft = 0;
     this.dueBlink = Infinity;
+    this.resumeTickMs = null;
+    this.resumeBlinkMs = null;
+    this.resumeBlinksLeft = 0;
     this.dueTick = this.time + this.game.delay;
   };
 
   Phone.prototype.resume = function () {
     this.paused = false;
     this.setMode('game');
-    this.blinksLeft = 0;
-    this.dueBlink = Infinity;
-    this.dueTick = this.time + this.game.delay;      // [EST] the step time starts afresh
+    this.blinksLeft = this.resumeBlinksLeft;
+    this.dueBlink = this.resumeBlinkMs === null ? Infinity : this.time + this.resumeBlinkMs;
+    this.dueTick = this.time + (this.resumeTickMs === null ? this.game.delay : this.resumeTickMs);
+    this.resumeTickMs = null;
+    this.resumeBlinkMs = null;
+    this.resumeBlinksLeft = 0;
   };
 
   Phone.prototype.pause = function () {
@@ -220,6 +302,11 @@
   Phone.prototype.onTick = function () {
     var g = this.game;
     var ret = g.tick();
+    for (var i = this.eventCursor; i < g.events.length; i++) {
+      if (g.events[i] === 'vibra') this.emit('vibration');
+      else this.emit(g.events[i]);
+    }
+    this.eventCursor = g.events.length;
     if (ret === RET.OVER) { this.gameOver(); return; }
     if (ret === RET.CRASH) {
       this.blinksLeft = Config.BLINK_TOGGLES;
@@ -237,7 +324,8 @@
   Phone.prototype.gameOver = function () {
     var score = this.game.score;
     var isTop = score > this.store.top;
-    this.lastGameOver = { score: score, top: isTop ? score : this.store.top, newTop: isTop };
+    var won = this.game.code === 0x22;
+    this.lastGameOver = { score: score, top: isTop ? score : this.store.top, newTop: isTop, won: won };
     if (isTop) this.store.top = score;
     this.game = null;
     this.dueTick = Infinity;
@@ -248,8 +336,12 @@
 
   Phone.prototype.showGameOverNote = function () {
     var info = this.lastGameOver;
-    var tpl = info.newTop ? Texts.GAME_OVER_TOP : Texts.GAME_OVER_SCORE;
+    var tpl = info.won ? this.t('YOU_WON') : (info.newTop ? this.t('GAME_OVER_TOP') : this.t('GAME_OVER_SCORE'));
     this.showNote(Screens.noteLines(tpl, { n: info.score }), this.showMain.bind(this, 0));
+  };
+
+  Phone.prototype.emit = function (name) {
+    try { if (typeof this.onEvent === 'function') this.onEvent(name); } catch (ignore) {}
   };
 
   // ----- keys ---------------------------------------------------------------------------------------------------------
@@ -294,6 +386,8 @@
     else if (key === 'scrollDown') this.menuMove(1);
     else if (key === 'select') this.menuSelect();
     else if (key === 'c' && this.menu.kind === 'mazes') this.showMain();      // [EST] back, the main menu as it was
+    else if (key === 'c' && this.menu.kind === 'language') this.showOptions(3);
+    else if (key === 'c' && this.menu.kind === 'options') this.showMain();
   };
 
   Phone.prototype.pressLevel = function (key) {
@@ -307,7 +401,7 @@
   };
 
   Phone.prototype.pressInstructions = function (key) {
-    if (key === 'select') this.page = (this.page + 1) % Screens.instructionPages().length;
+    if (key === 'select') this.page = (this.page + 1) % Screens.instructionPages(this.t('INSTRUCTION_TEXT')).length;
     else if (key === 'c') this.showMain();
   };
 
@@ -315,6 +409,64 @@
     if (key === 'c') { this.pause(); return; }
     var msg = KEYPAD_MSG[key] || TURN_MSG[key];
     if (msg !== undefined) this.game.key(msg);
+  };
+
+  Phone.prototype.snapshot = function () {
+    var game = this.game ? this.game.snapshot() : null;
+    return {
+      version: 1, mode: this.mode, paused: !!this.paused, main: { s: this.main.s, c: this.main.c },
+      store: { level: this.store.level, maze: this.store.maze, top: this.store.top,
+        gameSounds: this.store.gameSounds, keyTones: this.store.keyTones, vibration: this.store.vibration, language: this.store.language },
+      game: game,
+      remainingTick: this.mode === 'game' && isFinite(this.dueTick) ? Math.max(0, this.dueTick - this.time) : null,
+      remainingBlink: this.mode === 'game' && isFinite(this.dueBlink) ? Math.max(0, this.dueBlink - this.time) : null,
+      blinksLeft: this.mode === 'game' ? this.blinksLeft : 0
+    };
+  };
+
+  Phone.prototype.restore = function (s) {
+    function int(v, lo, hi) { return typeof v === 'number' && isFinite(v) && Math.floor(v) === v && v >= lo && v <= hi; }
+    if (!s || s.version !== 1 || !Object.prototype.hasOwnProperty.call(s, 'game') || !s.store || !int(s.store.level, 1, 9) || !int(s.store.maze, 1, 6) ||
+        !int(s.store.top, 0, 0x7fffffff) || typeof s.paused !== 'boolean' || !s.main ||
+        !int(s.main.s, 0, 6) || !int(s.main.c, 0, 6) || typeof s.mode !== 'string') return false;
+    var hasGame = !!s.game;
+    var tempRng = { state: 0, getState: function () { return this.state; }, setState: function (v) { this.state = v; return true; } };
+    var restoredGame = null;
+    if (hasGame) {
+      if (!this.rng || typeof this.rng.setState !== 'function') return false;
+      restoredGame = Engine.Game.restore(s.game, tempRng);
+      if (!restoredGame) return false;
+      if ((s.mode === 'game') && (!int(s.remainingTick, 0, 60000) ||
+          (s.remainingBlink !== null && !int(s.remainingBlink, 0, 60000)))) return false;
+      if (s.blinksLeft !== undefined && !int(s.blinksLeft, 0, Config.BLINK_TOGGLES)) return false;
+    }
+    if (s.store.gameSounds !== undefined && typeof s.store.gameSounds !== 'boolean') return false;
+    if (s.store.keyTones !== undefined && typeof s.store.keyTones !== 'boolean') return false;
+    if (s.store.vibration !== undefined && typeof s.store.vibration !== 'boolean') return false;
+    if (s.store.language !== undefined && s.store.language !== null && typeof s.store.language !== 'string') return false;
+    if (restoredGame) {
+      restoredGame = Engine.Game.restore(s.game, this.rng);
+      if (!restoredGame) return false;
+    }
+    // Apply only after the complete payload has passed validation, so a bad save leaves this phone unchanged.
+    this.store.level = s.store.level; this.store.maze = s.store.maze; this.store.top = s.store.top;
+    if (s.store.gameSounds !== undefined) this.store.gameSounds = s.store.gameSounds;
+    if (s.store.keyTones !== undefined) this.store.keyTones = s.store.keyTones;
+    if (s.store.vibration !== undefined) this.store.vibration = s.store.vibration;
+    if (s.store.language !== undefined) this.store.language = s.store.language;
+    this.time = 0; this.modeStart = 0; this.note = null; this.lastGameOver = null;
+    this.game = restoredGame; this.paused = !!restoredGame; this.main.s = s.main.s;
+    this.main.c = restoredGame && s.mode === 'game' ? 0 : s.main.c;
+    this.resumeTickMs = restoredGame && s.mode === 'game' ? s.remainingTick : null;
+    this.resumeBlinkMs = restoredGame && s.mode === 'game' ? s.remainingBlink : null;
+    this.resumeBlinksLeft = restoredGame && s.mode === 'game' ?
+      (s.blinksLeft === undefined ? (s.remainingBlink === null ? 0 : Math.max(0, Config.BLINK_TOGGLES - restoredGame.blinkCount)) : s.blinksLeft) : 0;
+    if (restoredGame) {
+      this.showMain(this.main.c);
+      if (!s.paused && s.mode === 'game') this.paused = true;
+    } else this.showMain();
+    this.dueTick = Infinity; this.dueBlink = Infinity; this.blinksLeft = 0;
+    return true;
   };
 
   // ----- picture --------------------------------------------------------------------------------------------------------
@@ -327,13 +479,13 @@
       case 'splash': Screens.drawSplash(fb, t); break;
       case 'fireworks': Screens.drawFireworks(fb, t); break;
       case 'note': Screens.drawNote(fb, this.note.lines, this.note.icon ? { t: t } : null); break;
-      case 'level': Screens.drawLevel(fb, this.levelShown); break;
-      case 'instructions': Screens.drawInstructions(fb, this.page); break;
+      case 'level': Screens.drawLevel(fb, this.levelShown, this.t('LEVEL_LABEL'), this.t('OK')); break;
+      case 'instructions': Screens.drawInstructions(fb, this.page, this.t('INSTRUCTION_TEXT'), this.t('NEXT'), I18n.resolve(this.store.language) !== 'en'); break;
       case 'game': Scene.drawGame(fb, this.game); break;
       case 'menu':
         Screens.drawMenu(fb, {
-          items: this.menu.items, s: this.menu.state.s, c: this.menu.state.c,
-          header: this.header(), softKey: this.menu.kind === 'mazes' ? Texts.OK : Texts.SELECT
+          items: this.menu.items, values: this.menu.values, s: this.menu.state.s, c: this.menu.state.c,
+          header: this.header(), softKey: this.menu.kind === 'mazes' ? this.t('OK') : this.t('SELECT')
         });
         break;
     }

@@ -321,7 +321,7 @@ Not everything is known yet. [`web/FIDELITY.md`](web/FIDELITY.md) lists every el
 
 - the sound scripts, DTMF table and vibration events are decoded from firmware; the browser's oscillator waveform, gain and a few browser-key-to-DTMF mappings are estimates
 - the special bonus item is not in v2.0: the program rolls for it, but it is switched off in the phone and never appeared in any footage
-- the v2.1.2 working branch adds 36 translated menus; complex scripts use browser font shaping where the supplied PPM tables cannot be mapped reliably. The curved tick remains estimated and the top-score note icon is missing
+- v2.1.2 adds 36 translated menus; complex scripts use browser font shaping where the supplied PPM tables cannot be mapped reliably. The curved tick remains estimated and the top-score note icon is missing
 - the scrollbar is reconstructed from the available crops; its thumb height follows the visible-window ratio and its travel follows the list's top line
 - bonus creatures 0 and 3 match the program's picture but were never seen on a real phone, and the mazes were checked against the program but not yet against footage
 
@@ -351,11 +351,11 @@ LICENSE                            MIT, for the code and the text (what it does 
 
 ### Tests
 
-`cd web && npm test` (Node 22, nothing to install): 385 tests. The engine against recorded program conversations, the picture library against measured frames, the phone on its virtual clock, tone scheduling, input mapping, localization, save/restore and storage behavior. There is no build step; Pages publishes the static `web/` files.
+`cd web && npm test` (Node 22, nothing to install): 386 tests. The engine against recorded program conversations, the picture library against measured frames, the phone on its virtual clock, tone scheduling, input mapping, localization, save/restore and storage behavior. There is no build step; Pages publishes the static `web/` files.
 
 ## Credits and legal
 
-The Java remake and the 2021 write-up are the author's (Hunor, GameKiller168); so are the choice of footage and firmware and the decisions about what to publish. The v2.0 browser edition was built with Claude (Anthropic); v2.1 was completed with Codex (OpenAI), and v2.1.2 menu localization is in progress. The four clips in the footage table belong to their makers and are not part of this repository.
+The Java remake and the 2021 write-up are the author's (Hunor, GameKiller168); so are the choice of footage and firmware and the decisions about what to publish. The v2.0 browser edition was built with Claude (Anthropic); v2.1 and v2.1.2 were completed with Codex (OpenAI). The four clips in the footage table belong to their makers and are not part of this repository.
 
 The pictures on this page are in `docs/img`. The title picture, the figures and the page images are cut from the 2021 PDF; the screens and the GIF were captured from the v2.0 build (the GIF is a bot playing). No frame from the third-party clips is used.
 
@@ -369,7 +369,7 @@ The MIT License does not cover Nokia's work: the pixel pictures and texts taken 
 
 ## Magyarul
 
-Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.1.2` fejlesztői ág a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya, eredeti hangszekvenciák, automatikus mentés, Options és a v6.39 PPM táblázatában szereplő 36 nyelvre fordított menü.
+Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.1.2` kiadás a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya, eredeti hangszekvenciák, automatikus mentés, Options és a v6.39 PPM táblázatában szereplő 36 nyelvre fordított menü.
 
 A 2026-os fejlesztés MI-vel (Claude) készült. A képek és az időzítések valódi telefonokról készült videókból vannak mérve, a szabályok a telefon firmware-éből kiolvasva és kézzel újraírva, a játékmotort pedig 84 rögzített beszélgetéssel teszteljük a telefon saját programjával szemben. Hogy melyik elem mire épül (a telefon programja, videó vagy becslés), azt a [`web/FIDELITY.md`](web/FIDELITY.md) tartalmazza.
 

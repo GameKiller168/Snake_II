@@ -4,7 +4,7 @@
 
 Taking a Nokia 3310 classic apart, twice: a hand-built Java remake in 2021, and in 2026 a browser edition that is checked, message by message, against the phone's own program.
 
-[Play it](#play-v20) · [2021: the Java remake](#2021-the-java-remake) · [2026: reading the real game](#2026-reading-the-real-game) · [Evidence ledger](web/FIDELITY.md)
+[▶ Play it now](https://gamekiller168.github.io/snake_ii/) · [How to play](#play-v20) · [2021: the Java remake](#2021-the-java-remake) · [2026: reading the real game](#2026-reading-the-real-game) · [Evidence ledger](web/FIDELITY.md)
 
 <img src="docs/img/hero.png" width="380" alt="The Snake II title picture of the Nokia 3310, black on LCD green, with the caption Nokia 3310 - Snake II in Java"> <img src="docs/img/v2-gameplay.gif" width="380" alt="The browser edition v2.0: start-up animation, main menu and a few seconds of play with a bonus creature">
 
@@ -34,6 +34,10 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 The 2021 files are exactly as they were uploaded: `git diff v1.0 -- "Snake II" "Snake II Nokia 3310 in Java.pdf"` is empty.
 
 ## Play v2.0
+
+**[▶ Play in your browser](https://gamekiller168.github.io/snake_ii/)** (GitHub Pages, deployed from `web/` on every push to `main`).
+
+Or run it locally:
 
 No build step, no dependencies, no server code: plain HTML, CSS and JavaScript.
 

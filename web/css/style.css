@@ -1,17 +1,14 @@
-/* Snake II - browser edition. Page chrome only; the game itself is drawn on the canvas. */
+/* Snake II - the page around the display. Plain and dark so that the display is the only thing to look at. */
 
 :root {
-  --bg: #070a07;
-  --panel: #0f150f;
-  --panel-hi: #162116;
-  --line: #213621;
-  --text: #a6dca6;
-  --dim: #5f8d5f;
-  --neon: #39ff14;
-  --bezel-a: #1f271f;
-  --bezel-b: #0a0d0a;
-  --pad: clamp(8px, 2vw, 16px);
-  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  --page: #14161a;
+  --key: #2a2e35;
+  --key-top: #3a3f48;
+  --key-down: #1d2025;
+  --ink: #d5d8de;
+  --dim: #8a909b;
+  --bezel: #0b0c0e;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 * {
@@ -20,319 +17,141 @@
 
 html,
 body {
-  height: 100%;
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  min-height: 100%;
+  background: var(--page);
+  color: var(--ink);
 }
 
 body {
-  font-family: var(--mono);
+  font-family: var(--sans);
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
+  display: flex;
+  justify-content: center;
 }
 
-.app {
-  height: 100vh;
-  height: 100dvh;
+.unit {
+  /* the display is as wide as the window allows, but never so tall that the keys fall off the bottom */
+  --lcd-w: min(100vw - 24px, (100vh - 400px) * 35 / 24, 760px);
+  --lcd-w: min(100vw - 24px, (100dvh - 400px) * 35 / 24, 760px);
+  width: max(var(--lcd-w), 280px);
+  padding: max(12px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom))
-    max(12px, env(safe-area-inset-left));
+  align-items: stretch;
+  gap: 14px;
 }
 
-/* --- header ------------------------------------------------------------------------------------ */
-
-.bar {
-  width: 100%;
-  max-width: 1100px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.logo {
+.title {
   margin: 0;
-  font-size: clamp(15px, 3.4vw, 26px);
-  font-weight: 700;
-  letter-spacing: 0.3em;
-  color: var(--neon);
-  text-shadow: 0 0 12px rgba(57, 255, 20, 0.45);
-  white-space: nowrap;
-}
-
-.tools {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.chip {
-  min-height: 32px;
-  padding: 5px 11px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--text);
-  font: inherit;
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.chip:hover {
-  background: var(--panel-hi);
-  border-color: #2f5a2f;
-}
-
-.chip[aria-pressed="false"] {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--dim);
+  text-align: center;
 }
 
-.chip:focus-visible,
-.key:focus-visible {
-  outline: 2px solid var(--neon);
-  outline-offset: 2px;
-}
-
-/* --- display ------------------------------------------------------------------------------------ */
-
-.stage {
-  flex: 1 1 0;
-  min-height: 0;
-  min-width: 0;
-  width: 100%;
-  max-width: 1100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  outline: none;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  cursor: pointer;
-}
-
-.bezel {
-  line-height: 0;
-  padding: var(--pad);
-  border-radius: 18px;
-  background: linear-gradient(160deg, var(--bezel-a), var(--bezel-b));
-  box-shadow: 0 0 0 1px #243324, 0 14px 44px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+.screen {
+  background: var(--bezel);
+  padding: clamp(8px, 2.4vw, 18px);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px #20232a, 0 6px 24px rgba(0, 0, 0, 0.45);
 }
 
 #lcd {
   display: block;
-  border-radius: 3px;
-  outline: 2px solid #020302;
-  image-rendering: pixelated;
-}
-
-.hint {
-  margin: 0;
-  min-height: 1.5em;
-  max-width: 1100px;
-  text-align: center;
-  font-size: clamp(11px, 1.7vw, 14px);
-  letter-spacing: 0.03em;
-  color: var(--dim);
-}
-
-/* --- touch controls ------------------------------------------------------------------------------ */
-
-.pad {
-  display: none;
   width: 100%;
-  max-width: 560px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 2px 6px 4px;
+  height: auto;
+  aspect-ratio: 35 / 24;          /* 84 x 10 : 48 x 12 */
+  border-radius: 3px;
 }
 
-.app[data-input="touch"] .pad {
-  display: flex;
-}
+/* --- keys ---------------------------------------------------------------------------------------------- */
 
-.dpad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 5px;
-  width: min(46vw, 210px);
-  aspect-ratio: 1;
-}
-
-.k-up {
-  grid-area: 1 / 2;
-}
-.k-left {
-  grid-area: 2 / 1;
-}
-.k-right {
-  grid-area: 2 / 3;
-}
-.k-down {
-  grid-area: 3 / 2;
-}
-
-.side {
+.keys {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: min(42vw, 200px);
-}
-
-.key {
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--panel);
-  color: var(--text);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.functions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 2fr;
+  gap: 10px;
+}
+
+.digits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: min(100%, 360px);
+  margin: 0 auto;
+}
+
+.keys button {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  height: 54px;
+  border-radius: 10px;
+  background: var(--key-top);
+  color: var(--ink);
+  font: inherit;
+  font-size: 20px;
+  box-shadow: 0 3px 0 #15171b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
-.key svg {
-  width: 46%;
-  height: 46%;
-  fill: currentColor;
+.keys .functions button {
+  font-size: 16px;
+  height: 48px;
 }
 
-.key.down,
-.key:active {
-  background: #1d381d;
-  border-color: var(--neon);
-  color: #fff;
+.keys button.down {
+  background: var(--key-down);
+  box-shadow: 0 0 0 #15171b;
+  transform: translateY(3px);
 }
 
-.key.wide {
-  min-height: 72px;
-}
-
-.key.ok {
-  color: var(--neon);
-  border-color: #2c5a2c;
-}
-
-.key.ghost {
-  min-height: 46px;
-  font-size: 12px;
+.keys .hint {
+  font-size: 11px;
   color: var(--dim);
 }
 
-.app[data-mode="title"] #btn-menu,
-.app[data-mode="play"] #btn-menu {
-  visibility: hidden;
-}
-
-/* narrow screens: one tidy header row, a little more room for the display */
-@media (max-width: 520px) {
-  :root {
-    --pad: 5px;
-  }
-  .app {
-    padding-left: max(6px, env(safe-area-inset-left));
-    padding-right: max(6px, env(safe-area-inset-right));
-    gap: 6px;
-  }
-  .bar {
-    gap: 8px;
-  }
-  .logo {
-    font-size: 15px;
-    letter-spacing: 0.2em;
-  }
-  .tools {
-    flex-wrap: nowrap;
-    gap: 4px;
-  }
-  .chip {
-    min-height: 30px;
-    padding: 4px 8px;
-    font-size: 11px;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-  }
-  .bezel {
-    border-radius: 12px;
-  }
-}
-
-/* phones in landscape: the controls move to the sides of the display */
-@media (orientation: landscape) and (max-height: 560px) {
-  .app[data-input="touch"] {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas:
-      "bar   bar   bar"
-      "dpad  stage side"
-      "hint  hint  hint";
-    align-items: center;
-    gap: 6px 12px;
-  }
-  .app[data-input="touch"] .bar {
-    grid-area: bar;
-    max-width: none;
-  }
-  .app[data-input="touch"] .stage {
-    grid-area: stage;
-    height: 100%;
-    max-width: none;
-  }
-  .app[data-input="touch"] .hint {
-    grid-area: hint;
-    max-width: none;
-  }
-  .app[data-input="touch"] .pad {
-    display: contents;
-  }
-  .app[data-input="touch"] .dpad {
-    grid-area: dpad;
-    width: min(40vh, 180px);
-    max-width: 26vw;
-  }
-  .app[data-input="touch"] .side {
-    grid-area: side;
-    width: min(22vw, 160px);
-  }
-  .app[data-input="touch"] .logo {
-    font-size: 14px;
-  }
-}
-
-/* --- misc ---------------------------------------------------------------------------------------- */
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.help {
+  margin: 2px 4px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--dim);
+  text-align: center;
 }
 
 .noscript {
-  margin: 24px;
   text-align: center;
-  color: var(--text);
+  color: var(--dim);
+}
+
+/* a touch device has no use for the keyboard line */
+@media (hover: none) and (pointer: coarse) {
+  .help {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .keys button {
+    height: 58px;
+  }
 }

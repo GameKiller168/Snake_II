@@ -1,166 +1,97 @@
 /*
- * LCD painter: the 84 x 48 bit matrix -> canvas.
+ * The LCD painter: turns the 84 x 48 bit matrix into canvas pixels.
  *
- * Every LCD pixel is a rectangle (the original window was 841 x 576: 10 x 12 screen pixels per LCD pixel,
- * separated by 1 pixel grid lines in the background colour - Screen.paint drew them with drawLine).
- * Cells are scaled by whole device pixels so nothing is ever blurred, also on high-DPI screens.
- *
- * Skins:
- *   neon  - the colours of the 2021 version: pure green, black pixels
- *   lcd   - the greenish display of the old phones: dark ink, faint unlit pixels, a soft shadow
+ * What is measured in footage of real phones [VIDEO]:
+ *   - the pixels are not square: 10.008 x 11.967 in the picture, so 10 : 12 (Config.PIXEL_W / PIXEL_H)
+ *   - between two rows of dark pixels runs a thin lighter line (about a tenth of the pitch, about 40 % as bright as
+ *     the background); between two columns the gap is hardly visible
+ * Not measured [EST]: the colours. They depend on the camera and the light (the background is teal-green in one
+ * clip, khaki in another), so one typical grey-green is used here. There is exactly one look: no skins.
  */
 (function () {
   'use strict';
 
   var NS = (globalThis.SnakeII = globalThis.SnakeII || {});
-  var req = typeof require === 'function';
-  var config = NS.config || (req ? require('./config.js') : null);
-  var Framebuffer = NS.Framebuffer || (req ? require('./framebuffer.js') : null);
+  var Config = NS.Config;
+  var Framebuffer = NS.Framebuffer;
 
-  var SKINS = {
-    neon: { name: 'neon', bg: '#00ff00', ink: '#000000', ghost: null, shadow: null },
-    lcd: {
-      name: 'lcd',
-      bg: '#71cd0e',
-      ink: '#052a00',
-      ghost: 'rgba(5, 42, 0, 0.075)',
-      shadow: 'rgba(5, 42, 0, 0.2)'
-    }
+  var LOOK = {
+    OFF: '#a2ad8a',        // [EST] background of the LCD
+    ON: '#222a1c',         // [EST] a dark pixel
+    GAP_ROW: 0.40,         // [VIDEO] brightness of the line between two rows of dark pixels (0 = dark, 1 = background)
+    GAP_COL: 0.12,         // [VIDEO] hardly visible between columns
+    GRID_OFF: 0.06         // [EST] very faint grid in the empty background
   };
-  var SKIN_ORDER = ['neon', 'lcd'];
 
-  /**
-   * How big the cells are. Everything in device pixels, so the result is crisp.
-   * @param {number} availW  available width in CSS pixels
-   * @param {number} availH  available height in CSS pixels
-   * @param {number} dpr     device pixel ratio
-   * @returns {{cw:number, ch:number, gap:number, width:number, height:number, cssW:number, cssH:number}}
-   */
-  function computeLayout(availW, availH, dpr) {
-    dpr = dpr > 0 ? dpr : 1;
-    availW = isFinite(availW) ? availW : 0;
-    availH = isFinite(availH) ? availH : 0;
-    var aw = Math.max(1, Math.floor(availW * dpr));
-    var ah = Math.max(1, Math.floor(availH * dpr));
-    var ratio = config.CELL_H / config.CELL_W;
-    var cw = Math.floor(Math.min(aw / config.LCD_W, ah / (config.LCD_H * ratio)));
-    if (cw < 1) cw = 1;
-    var ch = Math.max(1, Math.round(cw * ratio));
-    while (cw > 1 && ch * config.LCD_H > ah) {
-      cw--;
-      ch = Math.max(1, Math.round(cw * ratio));
+  function mix(a, b, t) {
+    // colours as '#rrggbb'; t = share of b
+    var pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16), out = 0;
+    for (var s = 16; s >= 0; s -= 8) {
+      var ca = (pa >> s) & 255, cb = (pb >> s) & 255;
+      out = (out << 8) | Math.round(ca + (cb - ca) * t);
     }
-    var gap = cw >= 3 ? Math.max(1, Math.round(cw / 10)) : 0;
-    var width = cw * config.LCD_W;
-    var height = ch * config.LCD_H;
-    return { cw: cw, ch: ch, gap: gap, width: width, height: height, cssW: width / dpr, cssH: height / dpr };
+    return '#' + ('000000' + out.toString(16)).slice(-6);
   }
 
-  function LCD(canvas, opts) {
-    opts = opts || {};
+  function Lcd(canvas) {
     this.canvas = canvas;
+    this.pw = Config.PIXEL_W;
+    this.ph = Config.PIXEL_H;
+    canvas.width = Config.LCD_W * this.pw;
+    canvas.height = Config.LCD_H * this.ph;
     this.ctx = canvas.getContext('2d', { alpha: false });
-    this.skin = SKINS[opts.skin] || SKINS.neon;
-    this.layout = null;
-    this.dpr = 1;
-    this.bg = null; // cached background (colour + unlit pixels)
-    this.last = new Framebuffer(config.LCD_W, config.LCD_H);
-    this.dirty = true;
+    this.cell = this.makeCell();
+    this.back = this.makeBackground();
+    this.last = new Framebuffer(Config.LCD_W, Config.LCD_H);
+    this.valid = false;
   }
 
-  LCD.prototype.setSkin = function (name) {
-    var skin = SKINS[name];
-    if (!skin || skin === this.skin) return;
-    this.skin = skin;
-    this.bg = null;
-    this.dirty = true;
-  };
-
-  LCD.prototype.nextSkin = function () {
-    var i = SKIN_ORDER.indexOf(this.skin.name);
-    var name = SKIN_ORDER[(i + 1) % SKIN_ORDER.length];
-    this.setSkin(name);
-    return name;
-  };
-
-  /** Fit into the given CSS box. Returns the layout. */
-  LCD.prototype.resize = function (availW, availH, dpr) {
-    var L = computeLayout(availW, availH, dpr);
-    this.dpr = dpr > 0 ? dpr : 1;
-    var old = this.layout;
-    this.layout = L;
-    if (!old || old.width !== L.width || old.height !== L.height) {
-      this.canvas.width = L.width;
-      this.canvas.height = L.height;
-    }
-    this.canvas.style.width = L.cssW + 'px';
-    this.canvas.style.height = L.cssH + 'px';
-    this.bg = null;
-    this.dirty = true;
-    return L;
-  };
-
-  LCD.prototype._buildBackground = function () {
-    var L = this.layout;
+  function newCanvas(w, h) {
     var c = document.createElement('canvas');
-    c.width = L.width;
-    c.height = L.height;
-    var g = c.getContext('2d', { alpha: false });
-    g.fillStyle = this.skin.bg;
-    g.fillRect(0, 0, L.width, L.height);
-    if (this.skin.ghost) {
-      g.fillStyle = this.skin.ghost;
-      for (var y = 0; y < config.LCD_H; y++) {
-        for (var x = 0; x < config.LCD_W; x++) {
-          g.fillRect(x * L.cw + L.gap, y * L.ch + L.gap, L.cw - L.gap, L.ch - L.gap);
-        }
+    c.width = w;
+    c.height = h;
+    return c;
+  }
+
+  /** One dark pixel with its thin lighter lines at the bottom and the right edge. */
+  Lcd.prototype.makeCell = function () {
+    var pw = this.pw, ph = this.ph;
+    var c = newCanvas(pw, ph), x = c.getContext('2d');
+    x.fillStyle = LOOK.ON;
+    x.fillRect(0, 0, pw, ph);
+    x.fillStyle = mix(LOOK.ON, LOOK.OFF, LOOK.GAP_ROW);
+    x.fillRect(0, ph - 1, pw, 1);
+    x.fillStyle = mix(LOOK.ON, LOOK.OFF, LOOK.GAP_COL);
+    x.fillRect(pw - 1, 0, 1, ph - 1);
+    return c;
+  };
+
+  Lcd.prototype.makeBackground = function () {
+    var pw = this.pw, ph = this.ph, w = Config.LCD_W * pw, h = Config.LCD_H * ph;
+    var c = newCanvas(w, h), x = c.getContext('2d');
+    x.fillStyle = LOOK.OFF;
+    x.fillRect(0, 0, w, h);
+    x.fillStyle = mix(LOOK.OFF, LOOK.ON, LOOK.GRID_OFF);
+    for (var j = 1; j <= Config.LCD_H; j++) x.fillRect(0, j * ph - 1, w, 1);
+    for (var i = 1; i <= Config.LCD_W; i++) x.fillRect(i * pw - 1, 0, 1, h);
+    return c;
+  };
+
+  /** Paint the matrix; returns false (and does nothing) if it is the one that is already shown. */
+  Lcd.prototype.draw = function (fb) {
+    if (this.valid && this.last.equals(fb)) return false;
+    var ctx = this.ctx, pw = this.pw, ph = this.ph, w = fb.w, px = fb.px;
+    ctx.drawImage(this.back, 0, 0);
+    for (var y = 0; y < fb.h; y++) {
+      for (var x = 0; x < w; x++) {
+        if (px[y * w + x]) ctx.drawImage(this.cell, x * pw, y * ph);
       }
     }
-    this.bg = c;
-  };
-
-  LCD.prototype.invalidate = function () {
-    this.dirty = true;
-  };
-
-  /** Paints the matrix. Does nothing when neither the matrix nor the layout/skin changed. */
-  LCD.prototype.draw = function (fb) {
-    var L = this.layout;
-    if (!L) return false;
-    if (!this.dirty && this.last.equals(fb)) return false;
     this.last.copyFrom(fb);
-    this.dirty = false;
-
-    if (!this.bg) this._buildBackground();
-    var ctx = this.ctx;
-    ctx.drawImage(this.bg, 0, 0);
-
-    var px = fb.px, w = config.LCD_W, h = config.LCD_H;
-    var cw = L.cw, ch = L.ch, gap = L.gap;
-    var x, y;
-
-    if (this.skin.shadow) {
-      var so = Math.max(1, Math.round(cw / 7));
-      ctx.fillStyle = this.skin.shadow;
-      for (y = 0; y < h; y++) {
-        for (x = 0; x < w; x++) {
-          if (px[y * w + x]) ctx.fillRect(x * cw + gap + so, y * ch + gap + so, cw - gap, ch - gap);
-        }
-      }
-    }
-    ctx.fillStyle = this.skin.ink;
-    for (y = 0; y < h; y++) {
-      for (x = 0; x < w; x++) {
-        if (px[y * w + x]) ctx.fillRect(x * cw + gap, y * ch + gap, cw - gap, ch - gap);
-      }
-    }
+    this.valid = true;
     return true;
   };
 
-  LCD.SKINS = SKINS;
-  LCD.SKIN_ORDER = SKIN_ORDER;
-  LCD.computeLayout = computeLayout;
-
-  NS.LCD = LCD;
-  if (typeof module === 'object' && module.exports) module.exports = LCD;
+  Lcd.LOOK = LOOK;
+  NS.Lcd = Lcd;
 })();

@@ -1,71 +1,95 @@
 /*
- * Snake II - browser edition (v2.0)
+ * Snake II - browser edition (v2.0): the constants of the game.
  *
- * Shared constants. The geometry comes straight from the original 2021 Java code (v1.0):
- *   - the LCD is 84 x 48 pixels; one LCD pixel is a 10 x 12 rectangle on screen (Screen.java: 841 x 576)
- *   - the snake advances 4 LCD pixels per tick (Screen.tick: xCoor += 4)
- *   - the anchor of game cell (cx, cy) is (3 + 4 * cx, 11 + 4 * cy)  (getRandomX / getRandomY lattice)
- *   - the frame lines sit on rows 6, 8, 47 and columns 0, 83 (Screen.paint)
- *
- * The play field is a torus, like Snake II without a maze: leave on one side, come back on the other.
+ * Every number in this file has an evidence level, see FIDELITY.md:
+ *   FW    read from the program of a real Nokia 3310 (firmware v6.39) and cross-checked with footage
+ *   VIDEO measured in footage of real phones
+ * Nothing here is invented. Where a value is only known to one level of evidence it says so.
  */
 (function () {
   'use strict';
 
   var NS = (globalThis.SnakeII = globalThis.SnakeII || {});
 
-  var config = {
-    // --- LCD -----------------------------------------------------------------------------------
-    LCD_W: 84,
-    LCD_H: 48,
-    CELL_W: 10,            // screen px per LCD pixel, horizontally (original rectangular pixel)
-    CELL_H: 12,            // screen px per LCD pixel, vertically
+  // The game numbers its directions like this (also the order of the key handlers and the turn arithmetic).
+  var LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3;
 
-    // --- lattice -------------------------------------------------------------------------------
-    STEP: 4,               // LCD pixels per game cell
-    ORIGIN_X: 3,           // anchor x of cell cx = 0
-    ORIGIN_Y: 11,          // anchor y of cell cy = 0
-    FIELD_TOP: 8,          // first row of the play field (its frame line); wrap region = rows 8..47
-    FIELD_COLS: 21,        // 84 / 4
-    FIELD_ROWS: 10,        // (48 - 8) / 4
-    APPLE_COLS: 20,        // apples never straddle the wrap seam: cx 0..19
-    APPLE_ROWS: 9,         //                                     cy 0..8
+  /*
+   * The six "mazes" of the menu. Index 1 is "No maze" (a plain torus), 2..6 are Maze 1..5.
+   * Walls are straight segments [x0, y0, x1, y1] in cells, both ends included, either horizontal (y0 == y1)
+   * or vertical (x0 == x1, y0 < y1). The snake starts with its head at (startX + 7, startY) heading right.
+   * [FW] - not yet compared with footage (see FIDELITY.md).
+   */
+  var MAZES = [
+    null,
+    { name: 'No maze', startX: 4, startY: 4, walls: [] },
+    {
+      name: 'Maze 1', startX: 4, startY: 4,
+      walls: [[0, 0, 0, 8], [0, 0, 19, 0], [19, 0, 19, 8], [0, 8, 19, 8]]
+    },
+    {
+      name: 'Maze 2', startX: 0, startY: 4,
+      walls: [
+        [0, 0, 1, 0], [0, 0, 0, 1], [18, 0, 19, 0], [19, 0, 19, 1],
+        [0, 7, 0, 8], [0, 8, 1, 8], [18, 8, 19, 8], [19, 7, 19, 8],
+        [8, 3, 12, 3], [8, 5, 12, 5]
+      ]
+    },
+    {
+      name: 'Maze 3', startX: 0, startY: 5,
+      walls: [[8, 0, 8, 4], [12, 4, 12, 8], [11, 2, 19, 2], [0, 6, 9, 6]]
+    },
+    {
+      name: 'Maze 4', startX: 4, startY: 7,
+      walls: [
+        [0, 0, 19, 0], [0, 0, 0, 3], [19, 0, 19, 3], [0, 5, 0, 8],
+        [0, 8, 19, 8], [19, 5, 19, 8], [7, 2, 7, 6], [13, 2, 13, 6]
+      ]
+    },
+    {
+      name: 'Maze 5', startX: 4, startY: 4,
+      walls: [
+        [0, 0, 0, 1], [0, 0, 2, 0], [5, 0, 16, 0], [0, 3, 8, 3],
+        [11, 3, 19, 3], [8, 0, 8, 3], [0, 6, 19, 6], [11, 6, 11, 8]
+      ]
+    }
+  ];
 
-    // --- start position (Screen.java: xCoor = 7, yCoor = 31, size = 9) --------------------------
-    START_CX: 1,
-    START_CY: 5,
-    START_SIZE: 9,
+  var Config = {
+    // --- the LCD ---------------------------------------------------------------------------------------
+    LCD_W: 84,                   // [FW][VIDEO]
+    LCD_H: 48,                   // [FW][VIDEO]
+    PIXEL_W: 10, PIXEL_H: 12,    // shape of one LCD pixel: 10 : 12 [VIDEO: measured 10.008 x 11.967]
 
-    // --- speed: milliseconds per step for level 1..9 (higher level = faster) ------------------
-    STEP_MS: [200, 175, 150, 130, 112, 96, 82, 70, 60],
-    INTRO_STEP_MS: 24,     // the snake "unrolls" quickly at the start (the original used t = 5000)
-    DEFAULT_LEVEL: 4,
+    // --- the field -------------------------------------------------------------------------------------
+    COLS: 20,                    // [FW][VIDEO] the snake wraps around all four edges
+    ROWS: 9,                     // [FW][VIDEO]
+    CELL: 4,                     // a cell is 4 x 4 LCD pixels
+    ORIGIN_X: 2,                 // cell (x, y) covers columns 2 + 4x .. 5 + 4x  [FW][VIDEO]
+    ORIGIN_Y: 10,                //                        rows 10 + 4y .. 13 + 4y
 
-    // --- scoring ----------------------------------------------------------------------------------
-    POINTS_PER_APPLE: 4,   // Screen.java: Score = (size - 9) * 4, multiplied by the level here
-    MAX_SCORE: 9999,       // four digits, like the original display
-    BONUS_EVERY: 5,        // a bonus bug shows up after every 5th apple
-    BONUS_TICKS: 56,       // lifetime of a bonus bug in steps (1 bar pixel per step)
-    BONUS_BASE: 5,         // bonus = level * (BONUS_BASE + floor(remaining / 4))
-    BONUS_BAR_X: 22,
-    BONUS_BAR_Y: 1,
-    BONUS_BAR_W: 56,
-    BONUS_BAR_H: 3,
+    LEFT: LEFT, UP: UP, RIGHT: RIGHT, DOWN: DOWN,
+    DX: [-1, 0, 1, 0],
+    DY: [0, -1, 0, 1],
 
-    // --- timing of the UI -------------------------------------------------------------------------
-    DYING_MS: 1100,        // frozen / blinking snake after a crash
-    OVER_LOCK_MS: 900      // ignore start presses right after the game over screen appears
+    // --- speed -----------------------------------------------------------------------------------------
+    // time between two steps, level 1..9, in ms [FW]; level 1 = 660 ms was measured too (0.657 .. 0.662 s, VIDEO B)
+    STEP_MS: [660, 480, 380, 300, 230, 180, 140, 110, 90],
+    DEFAULT_LEVEL: 1,
+
+    // --- rules -----------------------------------------------------------------------------------------
+    APPLE_POINTS: 'level',       // an apple gives `level` points [FW]
+    BONUS_EVERY: 5,              // a bonus creature after every 5th apple (progress += 4, spawn at >= 20) [FW][VIDEO]
+    BONUS_STEPS: 20,             // the creature stays for 20 steps, the counter starts at 20 [FW][VIDEO]
+    CRASH_GRACE_MS: 100,         // after the first blocked step the game waits 100 ms for a turn [FW]
+    CRASH_END_MS: 2100,          // and 2100 ms after the second one the game is over [FW][VIDEO]
+    BLINK_MS: 250,               // the snake blinks every 250 ms, 8 toggles before the game ends [FW][VIDEO]
+    BLINK_TOGGLES: 8,
+
+    MAZES: MAZES,
+    MAZE_NAMES: ['No maze', 'Maze 1', 'Maze 2', 'Maze 3', 'Maze 4', 'Maze 5']
   };
 
-  // direction codes are the original "lastPressed" codes
-  config.RIGHT = 0;
-  config.LEFT = 1;
-  config.UP = 2;
-  config.DOWN = 3;
-  config.DX = [1, -1, 0, 0];
-  config.DY = [0, 0, -1, 1];
-  config.OPPOSITE = [1, 0, 3, 2];
-
-  NS.config = config;
-  if (typeof module === 'object' && module.exports) module.exports = config;
+  NS.Config = Config;
+  if (typeof module === 'object' && module.exports) module.exports = Config;
 })();

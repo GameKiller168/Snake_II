@@ -1,212 +1,81 @@
 /*
- * Scene: turns the state of the game (a "view") into the 84 x 48 bit matrix of the LCD.
+ * The picture of the game: the engine's state drawn into the 84 x 48 matrix of the LCD, the way the phone
+ * composes it. The phone keeps a list of display objects and draws them in order (first everything of
+ * layer 0 in the order it was created, then layer 1):
  *
- * Pure drawing, no DOM and no timers, so it runs in Node and can be tested bit by bit. The view
- *   {
- *     mode:    'title' | 'play' | 'paused' | 'dying' | 'over'
- *     time:    a clock in ms (blinking, animation)
- *     corner:  close up the turns of the snake (Sprites cornerFill)
- *     level, best, newBest, cleared
- *     game:    a Game (score, segs, apple, bonus)      - not needed on the title screen
- *   }
- * is assembled by the controller.
+ *   layer 0  the frame, the walls of the maze, the apple, the bonus creature, the score, the bonus counter
+ *   layer 1  the snake, the line under the header
  *
- * Draw order on the playfield: the snake first (the corner repair may erase pixels of the snake itself),
- * then everything else is OR-ed on top, so the frame, the score and the apple are never punched.
+ * "Opaque" objects (snake tiles, digits, the creature in the header) clear their box before they draw;
+ * "transparent" ones (apple, creature on the field) only set pixels.
  */
 (function () {
   'use strict';
 
   var NS = (globalThis.SnakeII = globalThis.SnakeII || {});
   var req = typeof require === 'function';
-  var config = NS.config || (req ? require('./config.js') : null);
+  var Config = NS.Config || (req ? require('./config.js') : null);
+  var Tiles = NS.Tiles || (req ? require('./tiles.js') : null);
   var Font = NS.Font || (req ? require('./font.js') : null);
-  var Sprites = NS.Sprites || (req ? require('./sprites.js') : null);
 
-  var W = config.LCD_W;
-  var BLINK_MS = 500; // "PRESS START", "NEW BEST!"
-  var DEATH_BLINK_MS = 140; // the snake flashes after a crash
-  var BUG_FLIP_MS = 220; // legs of the bonus bug
-  var DEMO_STEP_MS = 95; // speed of the snake on the title screen
-  var DEMO_ROW = 3;
-  var SMALL = 'font3x5';
-  var BIG = 'font5x7';
+  var W = Config.COLS, H = Config.ROWS;
+  var GEOM = { x0: Config.ORIGIN_X, y0: Config.ORIGIN_Y, tile: Config.CELL };
 
-  // Texts on the LCD. Capitals only: that is what the bitmap fonts have.
-  var TEXTS = {
-    title: 'SNAKE II',
-    level: 'LEVEL',
-    best: 'BEST',
-    score: 'SCORE',
-    start: 'PRESS START',
-    paused: 'PAUSED',
-    over: 'GAME OVER',
-    cleared: 'CLEARED!',
-    newBest: 'NEW BEST!'
-  };
+  // the program's direction numbers (0 left, 1 up, 2 right, 3 down) -> the ones of tiles.js (0 right, 1 left, 2 up, 3 down)
+  var TILE_DIR = [1, 2, 0, 3];
 
-  function textsOf(view) {
-    return view.texts || TEXTS;
-  }
-
-  // The bonus bug is two cells wide (8 pixels). Two frames, the legs move.
-  var BUG = [
-    ['X..XX..X', '.XXXXXX.', '..XXXX..', '.XXXXXX.', 'X..XX..X'],
-    ['.X.XX.X.', 'X.XXXX.X', '..XXXX..', 'X.XXXX.X', '.X.XX.X.']
-  ];
-
-  function blinkOn(time, period) {
-    return Math.floor(time / period) % 2 === 0;
-  }
-
-  function centerText(fb, text, y, font) {
-    return Font.drawCentered(fb, text, y, font);
-  }
-
-  // ---------------------------------------------------------------------------------------------
-  // Playfield parts
-  // ---------------------------------------------------------------------------------------------
-
-  function drawBug(fb, bonus, time) {
-    var frame = BUG[Math.floor(time / BUG_FLIP_MS) % 2];
-    var left = Sprites.anchorX(bonus.x) - 2;
-    var top = Sprites.anchorY(bonus.y) - 2;
-    for (var r = 0; r < frame.length; r++) {
-      for (var c = 0; c < frame[r].length; c++) {
-        if (frame[r].charAt(c) === 'X') fb.set(left + c, top + r, 1);
-      }
+  /** The frame around the field and the walls of the maze. Constant for a maze. */
+  function drawBackground(fb, mazeIndex) {
+    fb.fillRect(0, 8, 4 * W + 3, 1, 1);            // top
+    fb.fillRect(0, 8, 1, 4 * H + 3, 1);            // left
+    fb.fillRect(4 * W + 3, 8, 1, 4 * (H + 1), 1);  // right
+    fb.fillRect(0, 4 * H + 11, 4 * W + 3, 1, 1);   // bottom
+    var walls = Config.MAZES[mazeIndex].walls;
+    for (var i = 0; i < walls.length; i++) {
+      var s = walls[i];
+      if (s[0] === s[2]) fb.fillRect(4 * s[0] + 3, 4 * s[1] + 11, 2, 4 * (s[3] - s[1]) + 2, 1);
+      else fb.fillRect(4 * s[0] + 3, 4 * s[1] + 11, 4 * (s[2] - s[0]) + 2, 2, 1);
     }
   }
 
-  /** Time left of the bonus bug: a bar in the header, one pixel per remaining step. */
-  function drawBonusBar(fb, ticks, time) {
-    var low = ticks <= config.BONUS_TICKS / 4;
-    if (low && !blinkOn(time, 200)) return; // the last quarter flashes
-    var fill = Math.max(1, Math.round((ticks * config.BONUS_BAR_W) / config.BONUS_TICKS));
-    fb.fillRect(config.BONUS_BAR_X, config.BONUS_BAR_Y, fill, config.BONUS_BAR_H);
-  }
-
-  function drawField(fb, view) {
-    var g = view.game;
-    var showSnake = view.mode !== 'dying' || blinkOn(view.time, DEATH_BLINK_MS);
-    if (showSnake) Sprites.drawSnake(fb, g.segs, { wrap: true, cornerFill: !!view.corner });
-    if (g.apple) Sprites.drawApple(fb, g.apple.x, g.apple.y);
-    if (g.bonus) {
-      drawBug(fb, g.bonus, view.time);
-      drawBonusBar(fb, g.bonus.ticks, view.time);
+  function drawScore(fb, score) {
+    var v = score % 10000;
+    for (var i = 0; i < 4; i++) {
+      Font.drawDigit(fb, Math.floor(v / Math.pow(10, 3 - i)) % 10, 4 * i, 0);
     }
-    Sprites.drawScore(fb, g.score);
-    Sprites.drawFrame(fb);
   }
 
-  // ---------------------------------------------------------------------------------------------
-  // Boxes (pause, game over)
-  // ---------------------------------------------------------------------------------------------
-
-  /** A framed, cleared rectangle centred on the playfield; returns its bounds. */
-  function drawBox(fb, w, h) {
-    var x = Math.round((W - w) / 2);
-    var y = Math.round((config.FIELD_TOP + 1 + config.LCD_H - 1 - h) / 2);
-    fb.clearRect(x, y, w, h);
-    fb.hline(x, y, w);
-    fb.hline(x, y + h - 1, w);
-    fb.vline(x, y, h);
-    fb.vline(x + w - 1, y, h);
-    // a one pixel "shadow" gives the box some depth, like the dialogs of the old phones
-    fb.hline(x + 2, y + h, w);
-    fb.vline(x + w, y + 2, h - 1);
-    return { x: x, y: y, w: w, h: h };
+  function drawCounter(fb, game) {
+    if (game.counter <= 0) return;
+    Font.drawDigit(fb, game.counter % 10, 79, 0);
+    Font.drawDigit(fb, Math.floor(game.counter / 10), 75, 0);
+    fb.clearRect(66, 1, 8, 4);
+    Tiles.drawCreature(fb, game.iconType, 66, 1, { x0: 0, y0: 0, tile: 1 });
   }
 
-  function drawPaused(fb, view) {
-    var T = textsOf(view);
-    var w = Font.measure(T.paused, BIG) + 10;
-    var box = drawBox(fb, w, 17);
-    Font.drawCentered(fb, T.paused, box.y + 5, BIG);
-  }
-
-  function drawOver(fb, view) {
-    var T = textsOf(view);
-    var title = view.cleared ? T.cleared : T.over;
-    var score = T.score + ' ' + pad4(view.game.score);
-    var line3 = view.newBest ? T.newBest : T.best + ' ' + pad4(view.best);
-    var w = Math.max(Font.measure(title, BIG), Font.measure(score, SMALL), Font.measure(line3, SMALL)) + 10;
-    var box = drawBox(fb, w, 34);
-    Font.drawCentered(fb, title, box.y + 5, BIG);
-    Font.drawCentered(fb, score, box.y + 16, SMALL);
-    if (!view.newBest || blinkOn(view.time, BLINK_MS)) Font.drawCentered(fb, line3, box.y + 24, SMALL);
-  }
-
-  function pad4(n) {
-    var s = String(Math.max(0, Math.min(config.MAX_SCORE, n | 0)));
-    while (s.length < 4) s = '0' + s;
-    return s;
-  }
-
-  // ---------------------------------------------------------------------------------------------
-  // Title screen
-  // ---------------------------------------------------------------------------------------------
-
-  /** A snake crawling along one row, wrapping around the edge: the "attract mode". */
-  function demoSegs(time) {
-    var head = Math.floor(time / DEMO_STEP_MS) % config.FIELD_COLS;
+  function drawSnake(fb, game) {
     var segs = [];
-    for (var k = config.START_SIZE - 1; k >= 0; k--) {
-      segs.push({ x: Sprites.mod(head - k, config.FIELD_COLS), y: DEMO_ROW, d: config.RIGHT });
+    for (var i = 0; i < game.snake.length; i++) {
+      var s = game.snake[i];
+      segs.push({ x: s.x, y: s.y, d: TILE_DIR[s.d], fed: s.fed });
     }
-    return segs;
+    Tiles.drawSnake(fb, segs, GEOM, game.headOpen);
   }
 
-  function drawTitle(fb, view) {
-    var T = textsOf(view);
-    Sprites.drawSnake(fb, demoSegs(view.time), { wrap: true, cornerFill: !!view.corner });
-
-    centerText(fb, T.title, 11, BIG);
-
-    var lv = T.level + ' ' + view.level;
-    var y = 28;
-    var x = centerText(fb, lv, y, SMALL);
-    var w = Font.measure(lv, SMALL);
-    if (view.level > 1) Font.drawText(fb, '<', x - 6, y, SMALL);
-    if (view.level < config.STEP_MS.length) Font.drawText(fb, '>', x + w + 3, y, SMALL);
-
-    centerText(fb, T.best + ' ' + pad4(view.best), 35, SMALL);
-
-    if (blinkOn(view.time, BLINK_MS)) centerText(fb, T.start, 41, SMALL);
-
-    Sprites.drawFrame(fb);
-  }
-
-  // ---------------------------------------------------------------------------------------------
-
-  function render(fb, view) {
+  /** Draw a whole game picture into fb (cleared first). */
+  function drawGame(fb, game) {
     fb.clear();
-    switch (view.mode) {
-      case 'title':
-        drawTitle(fb, view);
-        break;
-      case 'paused':
-        drawField(fb, view);
-        drawPaused(fb, view);
-        break;
-      case 'over':
-        drawField(fb, view);
-        drawOver(fb, view);
-        break;
-      default: // play, dying
-        drawField(fb, view);
-    }
+    drawBackground(fb, game.mazeIndex);
+    if (game.apple.x >= 0) Tiles.drawApple(fb, game.apple.x, game.apple.y, GEOM);
+    if (game.creature.shown) Tiles.drawCreature(fb, game.creature.type, game.creature.x, game.creature.y, GEOM);
+    drawScore(fb, game.score);
+    drawCounter(fb, game);
+    if (!game.snakeHidden) drawSnake(fb, game);
+    fb.hline(0, 6, 84);
     return fb;
   }
 
-  var Scene = {
-    render: render,
-    TEXTS: TEXTS,
-    demoSegs: demoSegs,
-    BUG: BUG,
-    BLINK_MS: BLINK_MS,
-    DEATH_BLINK_MS: DEATH_BLINK_MS
-  };
+  var Scene = { drawGame: drawGame, drawBackground: drawBackground, TILE_DIR: TILE_DIR };
 
   NS.Scene = Scene;
   if (typeof module === 'object' && module.exports) module.exports = Scene;

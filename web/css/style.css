@@ -62,7 +62,7 @@ body {
   gap: 9px;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: manipulation;
+  touch-action: none;
 }
 .functions {
   display: grid;
@@ -90,7 +90,7 @@ body {
   color: #172d2b;
   font-family: var(--sans);
   cursor: pointer;
-  touch-action: manipulation;
+  touch-action: none;
   background:
     radial-gradient(ellipse at 48% 18%, rgba(255,255,255,.8), transparent 54%),
     linear-gradient(175deg, #eef0ea 0%, #cdd3d0 36%, #adb7b5 70%, #8e9a99 100%);

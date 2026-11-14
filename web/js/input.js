@@ -54,6 +54,7 @@
     var keyboard = {};
     var pointers = {};
     var buttons = {};
+    var dragging = {};
 
     function buttonFor(key) {
       if (!pad) return null;
@@ -92,6 +93,7 @@
     function releaseAll() {
       Object.keys(keyboard).forEach(function (id) { removeSource(keyboard[id], id); delete keyboard[id]; });
       Object.keys(pointers).forEach(function (id) { removeSource(pointers[id], id); delete pointers[id]; });
+      dragging = {};
     }
 
     document.addEventListener('keydown', function (e) {
@@ -119,31 +121,64 @@
     });
     if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('blur', releaseAll);
     if (!pad) return;
+    // Every finger (or mouse button) is its own pointer: it presses the key under it, and when it slides over to
+    // another key it lets go of the first and presses the next, independently of the other fingers.
+    function pointerId(e) { return 'p:' + (e.pointerId === undefined ? 'default' : e.pointerId); }
+    function keyButtonAt(x, y) {
+      var el = document.elementFromPoint ? document.elementFromPoint(x, y) : null;
+      var b = el && el.closest ? el.closest('[data-key]') : null;
+      return b && pad.contains(b) ? b : null;
+    }
+    function moveTo(id, b) {
+      var key = b ? b.getAttribute('data-key') : null;
+      if (pointers[id] === key) return;
+      if (pointers[id]) { removeSource(pointers[id], id); delete pointers[id]; }
+      if (key) { buttons[key] = b; pointers[id] = key; addSource(key, id); }
+    }
     pad.addEventListener('pointerdown', function (e) {
       var b = e.target.closest ? e.target.closest('[data-key]') : null;
       if (!b || !pad.contains(b)) return;
       e.preventDefault();
-      var id = 'p:' + (e.pointerId === undefined ? 'default' : e.pointerId);
+      var id = pointerId(e);
       var key = b.getAttribute('data-key');
+      // a touch is captured by the element it started on; let go so that it can slide over the other keys
+      if (e.target.releasePointerCapture && e.pointerId !== undefined) {
+        try { e.target.releasePointerCapture(e.pointerId); } catch (ignore) { /* not captured */ }
+      }
       if (options.captureAll && options.captureAll()) { if (options.onAnyKey) options.onAnyKey(key); return; }
+      dragging[id] = true;
       buttons[key] = b;
       if (!pointers[id]) { pointers[id] = key; addSource(key, id); }
     });
+    pad.addEventListener('pointermove', function (e) {
+      var id = pointerId(e);
+      if (!dragging[id]) return;
+      moveTo(id, keyButtonAt(e.clientX, e.clientY));
+    });
     function releasePointer(e) {
-      var id = 'p:' + (e.pointerId === undefined ? 'default' : e.pointerId);
+      var id = pointerId(e);
+      delete dragging[id];
       if (!pointers[id]) return;
       removeSource(pointers[id], id);
       delete pointers[id];
     }
     pad.addEventListener('pointerup', releasePointer);
+    pad.addEventListener('pointercancel', releasePointer);
+    // a finger lifted outside the pad must not leave a key stuck down
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('pointerup', releasePointer);
+      window.addEventListener('pointercancel', releasePointer);
+    }
     pad.addEventListener('pointerout', function (e) {
       // moving between the label and the edge of the same key is not leaving the key
       var from = e.target && e.target.closest ? e.target.closest('[data-key]') : null;
       var to = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest('[data-key]') : null;
       if (from && from === to) return;
-      releasePointer(e);
+      var id = pointerId(e);
+      if (!pointers[id]) return;
+      removeSource(pointers[id], id);
+      delete pointers[id];
     });
-    pad.addEventListener('pointercancel', releasePointer);
     pad.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   }
 

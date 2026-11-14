@@ -1,5 +1,5 @@
 /* Snake II service worker: precaches the static game, works offline. */
-const CACHE = "snake-ii-v2.3.1";
+const CACHE = "snake-ii-v2.3.2";
 const ASSETS = [
   "./",
   "./index.html",

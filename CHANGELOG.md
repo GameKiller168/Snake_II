@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.2 — 2026-11-15
+
+- The on-screen keypad is now fully multi-touch: any number of keys, up to all of them, can be held at once, each finger working independently. Dragging a finger over the keypad lets go of the key it leaves and presses the key it arrives on, also while other fingers stay down; a finger lifted outside the keypad no longer leaves a key stuck.
+
 ## v2.3.1 — 2026-11-14
 
 - Fixed the large font of the notes in the Hungarian, Spanish, Portuguese, Romanian, Croatian, Slovenian, Serbian and other locale packs: capital letters with accents (such as the É of "NYERTÉL!") were drawn as a jumble, because the extracted tables of PPM C, D, E, I and J hold those glyphs in two halves. Such glyphs now come from the whole PPM B table, and a line that still needs a damaged glyph (some Greek, Ukrainian and Hebrew capitals) is drawn in the bold small font instead.

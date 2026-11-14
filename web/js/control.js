@@ -243,9 +243,8 @@
 
   /**
    * A Hamiltonian cycle that has the snake of `g` as one of its arcs: the snake plus an order of all free cells that
-   * leads from its head round to its tail. While such a cycle exists the snake can always follow it, so it can never
-   * be trapped and will fill the field in the end. `guide` (cell -> next cell of an older cycle) is tried first, so a
-   * small change of the snake finds its new cycle at once. Returns the whole cycle (tail .. head, then the free cells),
+   * leads from its head round to its tail. `guide` (cell -> next cell of an older cycle) is tried first, so a small
+   * change of the snake finds its new cycle at once. Returns the whole cycle (tail .. head, then the free cells),
    * [] for a finished game, null if there is none (or none was found within `budget` search steps).
    */
   Planner.prototype.cycleOf = function (g, guide, budget) {

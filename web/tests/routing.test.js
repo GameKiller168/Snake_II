@@ -15,7 +15,7 @@ function lcg(seed) {
   return () => { x = (x * 1103515245 + 12345) & 0x7fffffff; return x / 0x80000000; };
 }
 
-test('every clearable maze is cleared to a full screen without a single mistake', () => {
+test('route search completes the supported layouts', () => {
   const count = { 1: 180, 2: 126, 3: 158, 4: 151, 6: 122 };
   assert.deepEqual(Control.MAZES, [1, 2, 3, 4, 6]);
   for (const maze of Control.MAZES) {
@@ -39,7 +39,7 @@ test('every clearable maze is cleared to a full screen without a single mistake'
   }
 });
 
-test('a maze that cannot be cleared never traps or crashes the snake either', () => {
+test('route search stays alive in the constrained layout', () => {
   for (let seed = 1; seed <= 3; seed++) {
     const game = new Engine.Game({ level: 9, maze: 5, rng: new Rng(seed * 7189) });
     const control = Control.create(game, lcg(seed));
@@ -56,7 +56,7 @@ test('a maze that cannot be cleared never traps or crashes the snake either', ()
   }
 });
 
-test('with a clear way the snake goes straight for the apple', () => {
+test('route search takes the straight way when it is free', () => {
   for (const [dx, dy] of [[3, 0], [0, 2], [0, -2], [4, 2], [-2, 3], [5, -3]]) {
     const game = new Engine.Game({ level: 9, maze: 1, rng: new Rng(11) });
     const head = game.snake[game.snake.length - 1];
@@ -69,7 +69,7 @@ test('with a clear way the snake goes straight for the apple', () => {
   }
 });
 
-test('the bonus comes before the apple, even when the apple is much closer', () => {
+test('route search prefers the bonus target', () => {
   const game = new Engine.Game({ level: 9, maze: 1, rng: new Rng(21) });
   const head = game.snake[game.snake.length - 1];
   const apple = { x: head.x + 1, y: head.y + 1 }, x = head.x + 2, y = head.y - 2;
@@ -86,7 +86,7 @@ test('the bonus comes before the apple, even when the apple is much closer', () 
   assert.ok(ticks <= 5);
 });
 
-test('temporary activity leaves a paused game, settings and score untouched', () => {
+test('a temporary screen leaves a paused game, settings and score untouched', () => {
   const writes = [];
   const backend = { getItem: () => null, setItem: (k, v) => writes.push([k, v]) };
   const store = Store.create(backend);
@@ -115,7 +115,7 @@ test('temporary activity leaves a paused game, settings and score untouched', ()
   assert.equal(writes.length, writeCount);
 });
 
-test('timed result screens proceed to another round without changing player score', () => {
+test('timed screens proceed without changing the stored score', () => {
   const store = Store.create(null); store.top = 542;
   const phone = new Phone({ store, rng: new Rng(2), skipSplash: true });
   phone.showOptions(1); phone.press('9'); phone.advance(3800);
@@ -183,7 +183,7 @@ test('the display moves complete bitmap rows by one pixel and holds them still',
   assert.deepEqual(Uint8Array.from(phone.draw().px), second);
 });
 
-test('a safe nearby bonus is pursued ahead of ordinary food', () => {
+test('route search reaches a nearby bonus first', () => {
   for (const maze of [1, 5]) {
     const game = new Engine.Game({ level: 4, maze, rng: new Rng(1234) });
     const head = game.snake[game.snake.length - 1];
@@ -203,7 +203,7 @@ test('a safe nearby bonus is pursued ahead of ordinary food', () => {
   }
 });
 
-test('different food positions lead to different safe decisions', () => {
+test('route search follows the position of the food', () => {
   const random = Math.random;
   Math.random = () => 0.25;
   try {
@@ -221,7 +221,7 @@ test('different food positions lead to different safe decisions', () => {
   } finally { Math.random = random; }
 });
 
-test('a stalled round shows its score and starts another round', () => {
+test('a timed screen sequence restarts after a long idle time', () => {
   const random = Math.random;
   Math.random = () => 0.7;
   try {
@@ -241,7 +241,7 @@ test('a stalled round shows its score and starts another round', () => {
   } finally { Math.random = random; }
 });
 
-test('the rounds only use mazes that can be cleared', () => {
+test('the layouts used are the ones with a complete route', () => {
   const random = Math.random, seen = new Set();
   try {
     for (const r of [0, 0.19, 0.2, 0.39, 0.4, 0.59, 0.6, 0.79, 0.8, 0.999]) {

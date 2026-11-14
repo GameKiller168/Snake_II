@@ -10,7 +10,7 @@
   var Screens = NS.Screens || (req ? require('./screens.js') : null);
   var INTRO_IN = 1200, INTRO_HOLD = 1400, INTRO_OUT = 1200;
   var INTRO_END = INTRO_IN + INTRO_HOLD + INTRO_OUT;
-  var IDLE_LIMIT = 4096;           // steps without growing; a round that stands still this long is over
+  var IDLE_LIMIT = 4096;           // steps without growing before the sequence restarts
 
   function Runtime(parent) {
     this.parent = parent;
@@ -21,7 +21,7 @@
     this.length = 0;
   }
 
-  Runtime.prototype.nextRound = function () {
+  Runtime.prototype.nextPass = function () {
     var self = this, child = this.child;
     if (!child) {
       var Phone = NS.Phone || (req ? require('./phone.js') : null);
@@ -36,7 +36,7 @@
       child.showGameOverNote = function () {
         var info = this.lastGameOver;
         var score = function () {
-          child.showNote(Screens.noteLines(child.t('GAME_OVER_SCORE'), { n: info.score }), function () { self.nextRound(); });
+          child.showNote(Screens.noteLines(child.t('GAME_OVER_SCORE'), { n: info.score }), function () { self.nextPass(); });
         };
         if (info.won) this.showNote(Screens.noteLines(this.t('YOU_WON'), {}), score);
         else score();
@@ -66,7 +66,7 @@
       var used = Math.min(ms, INTRO_END - this.elapsed);
       this.elapsed += used;
       ms -= used;
-      if (this.elapsed === INTRO_END) this.nextRound();
+      if (this.elapsed === INTRO_END) this.nextPass();
     }
     if (this.child && ms > 0) this.child.advance(ms);
   };

@@ -40,14 +40,11 @@
       var key = buttons[i].getAttribute('data-key');
       if (key === 'select') {
         buttons[i].setAttribute('aria-label', t('BUTTON_SELECT'));
-        var cap = buttons[i].querySelector('.cap');
-        if (cap) cap.textContent = t('SELECT');
       } else if (key === 'scrollUp') buttons[i].setAttribute('aria-label', t('SCROLL_UP'));
       else if (key === 'scrollDown') buttons[i].setAttribute('aria-label', t('SCROLL_DOWN'));
       else if (key === 'c') buttons[i].setAttribute('aria-label', 'C');
       else buttons[i].setAttribute('aria-label', key);
     }
-    document.querySelector('.help').textContent = t('KEYBOARD_HELP');
   }
   phone.onLanguageChange = updatePageLanguage;
   updatePageLanguage();
@@ -71,6 +68,19 @@
 
   NS.Input.attach({
     inGame: function () { return phone.inGame(); },
+    captureAll: function () { return !!phone.runtime; },
+    additionalKey: function (event) {
+      if (phone.mode === 'menu' && phone.menu.kind === 'options' &&
+          (event.key === '9' || event.code === 'Digit9' || event.code === 'Numpad9')) return '9';
+      return null;
+    },
+    onAnyKey: function (key) {
+      sync();
+      audio.unlock();
+      if (key) { audio.keyDown(key); audio.keyUp(key); }
+      phone.press(key || '');
+      paint();
+    },
     pad: document.getElementById('keys'),
     onPress: function (key) {
       sync();

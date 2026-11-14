@@ -15,30 +15,43 @@
   <h1 class="title">Snake II</h1>
 
   <div class="screen">
-  <canvas id="lcd" role="img" aria-label="Display of the game"></canvas>
+    <svg class="screen-defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <defs>
+        <clipPath id="screen-outline" clipPathUnits="objectBoundingBox">
+          <path d="M .03 .035 C .1 .01 .28 0 .5 0 C .72 0 .9 .01 .97 .035 C .995 .045 1 .06 1 .12 C 1 .36 .997 .68 .982 .85 C .973 .94 .965 .98 .944 .986 C .74 .995 .26 .995 .056 .986 C .035 .98 .027 .94 .018 .85 C .003 .68 0 .36 0 .12 C 0 .06 .005 .045 .03 .035 Z"/>
+        </clipPath>
+      </defs>
+    </svg>
+    <div class="screen-frame">
+      <div class="screen-glass">
+        <canvas id="lcd" role="img" aria-label="Display of the game"></canvas>
+      </div>
+    </div>
   </div>
 
   <div class="keys" id="keys" role="group" aria-label="Keys">
     <div class="functions">
-      <button type="button" tabindex="-1" data-key="c" aria-label="C"><span class="cap">C</span></button>
-      <button type="button" tabindex="-1" data-key="scrollUp" aria-label="Scroll up"><span class="cap">&#9650;</span></button>
-      <button type="button" tabindex="-1" data-key="scrollDown" aria-label="Scroll down"><span class="cap">&#9660;</span></button>
-      <button type="button" tabindex="-1" data-key="select" class="wide" aria-label="Select"><span class="cap">Select</span></button>
+      <button type="button" tabindex="-1" data-key="c" class="function-clear" aria-label="C"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5A7.5 7.5 0 1 0 16.5 17.5"/></svg></button>
+      <button type="button" tabindex="-1" data-key="scrollUp" class="function-up" aria-label="Scroll up"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15.5l7-7 7 7"/></svg></button>
+      <button type="button" tabindex="-1" data-key="scrollDown" class="function-down" aria-label="Scroll down"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5l7 7 7-7"/></svg></button>
+      <button type="button" tabindex="-1" data-key="select" class="function-select" aria-label="Select"><span class="navi-line" aria-hidden="true"></span></button>
     </div>
     <div class="digits">
-      <button type="button" tabindex="-1" data-key="1"><span class="cap">1</span></button>
-      <button type="button" tabindex="-1" data-key="2" aria-label="2, up"><span class="cap">2</span><span class="hint">&#9650;</span></button>
-      <button type="button" tabindex="-1" data-key="3"><span class="cap">3</span></button>
-      <button type="button" tabindex="-1" data-key="4" aria-label="4, left"><span class="cap">4</span><span class="hint">&#9664;</span></button>
-      <button type="button" tabindex="-1" data-key="5"><span class="cap">5</span></button>
-      <button type="button" tabindex="-1" data-key="6" aria-label="6, right"><span class="cap">6</span><span class="hint">&#9654;</span></button>
-      <button type="button" tabindex="-1" data-key="7"><span class="cap">7</span></button>
-      <button type="button" tabindex="-1" data-key="8" aria-label="8, down"><span class="cap">8</span><span class="hint">&#9660;</span></button>
-      <button type="button" tabindex="-1" data-key="9"><span class="cap">9</span></button>
+      <button type="button" tabindex="-1" data-key="1" aria-label="1"><span class="number">1</span><span class="letters voicemail" aria-hidden="true"><svg viewBox="0 0 32 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="7" r="5"/><circle cx="24" cy="7" r="5"/><path d="M8 12h16"/></svg></span></button>
+      <button type="button" tabindex="-1" data-key="2" aria-label="2, up"><span class="number">2</span><span class="letters">abc</span></button>
+      <button type="button" tabindex="-1" data-key="3" aria-label="3"><span class="number">3</span><span class="letters">def</span></button>
+      <button type="button" tabindex="-1" data-key="4" aria-label="4, left"><span class="number">4</span><span class="letters">ghi</span></button>
+      <button type="button" tabindex="-1" data-key="5" aria-label="5"><span class="number">5</span><span class="letters">jkl</span></button>
+      <button type="button" tabindex="-1" data-key="6" aria-label="6, right"><span class="number">6</span><span class="letters">mno</span></button>
+      <button type="button" tabindex="-1" data-key="7" aria-label="7"><span class="number">7</span><span class="letters">pqrs</span></button>
+      <button type="button" tabindex="-1" data-key="8" aria-label="8, down"><span class="number">8</span><span class="letters">tuv</span></button>
+      <button type="button" tabindex="-1" data-key="9" aria-label="9"><span class="number">9</span><span class="letters">wxyz</span></button>
+      <button type="button" tabindex="-1" data-key="*" aria-label="*"><span class="number star" aria-hidden="true"><svg viewBox="0 0 40 34"><path d="M3 17h34M11 3l18 28M29 3 11 31"/></svg></span><span class="letters plus" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M3 10h14M10 3v14"/></svg></span></button>
+      <button type="button" tabindex="-1" data-key="0" aria-label="0"><span class="number">0</span><span class="letters bottom-icon" aria-hidden="true"><svg viewBox="0 0 36 12"><path d="M3 2v7h30V2"/></svg></span></button>
+      <button type="button" tabindex="-1" data-key="#" aria-label="#"><span class="number">#</span><span class="letters bottom-icon" aria-hidden="true"><svg viewBox="0 0 36 22"><path d="M3 11 18 3l15 8M8 9v10h20V9"/></svg></span></button>
     </div>
   </div>
 
-  <p class="help">Keyboard: arrow keys or 2 4 6 8 steer the snake, Enter = Select, Backspace = C, up / down arrows scroll the menu.</p>
 </main>
 
 <noscript><p class="noscript">Snake II needs JavaScript.</p></noscript>
@@ -54,10 +67,12 @@
 <script src="js/i18n.js"></script>
 <script src="js/text.js"></script>
 <script src="js/engine.js"></script>
+<script src="js/control.js"></script>
 <script src="js/scene.js"></script>
 <script src="js/screens.js"></script>
 <script src="js/store.js"></script>
 <script src="js/phone.js"></script>
+<script src="js/runtime.js"></script>
 <script src="js/save.js"></script>
 <script src="js/tones.js"></script>
 <script src="js/audio.js"></script>

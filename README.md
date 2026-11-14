@@ -4,7 +4,7 @@
 
 Taking a Nokia 3310 classic apart, twice: a hand-built Java remake in 2021, and in 2026 a browser edition that is checked, message by message, against the phone's own program.
 
-[▶ Play it now](https://gamekiller168.github.io/Snake_II/) · [How to play](#play-v21) · [2021: the Java remake](#2021-the-java-remake) · [2026: reading the real game](#2026-reading-the-real-game) · [Evidence ledger](web/FIDELITY.md)
+[▶ Play it now](https://gamekiller168.github.io/Snake_II/) · [How to play](#play-v22) · [2021: the Java remake](#2021-the-java-remake) · [2026: reading the real game](#2026-reading-the-real-game) · [Evidence ledger](web/FIDELITY.md)
 
 <img src="docs/img/hero.png" width="380" alt="The Snake II title picture of the Nokia 3310, black on LCD green, with the caption Nokia 3310 - Snake II in Java"> <img src="docs/img/v2-gameplay.gif" width="380" alt="The browser edition v2.0: start-up animation, main menu and a few seconds of play with a bonus creature">
 
@@ -16,13 +16,13 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 
 ## Versions at a glance
 
-| | v1.0, 2021 | v2.0, 2026 | v2.1.0, 2026 | v2.1.2, 2026 |
-| --- | --- | --- | --- | --- |
-| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program | v2.0 plus decoded game/key tones, vibration, Options, eight languages and autosave | v2.1 with Nokia bitmap fonts and menus in all 36 listed PPM languages |
-| Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones and a firmware dump | The same sources, plus browser input and storage behavior | The same sources, plus recovered language fonts and the supplied PPM language chart |
-| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` | [`web/`](web), tag `v2.1.0` | [`web/`](web), tag `v2.1.2` |
-| Run it | [Run the 2021 build](#run-the-2021-build) | Historical browser edition | Historical browser edition | [Open the latest browser edition](#play-v212) |
-| The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) |
+| | v1.0, 2021 | v2.0, 2026 | v2.1.0, 2026 | v2.1.2, 2026 | v2.2.0, 2026 |
+| --- | --- | --- | --- | --- | --- |
+| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program | v2.0 plus decoded game/key tones, vibration, Options, eight languages and autosave | v2.1 with Nokia bitmap fonts and menus in all 36 listed PPM languages | v2.1.2 with a keypad redesigned after the real phone's keys and an LCD whose pixels fade in and out like a panel of the era |
+| Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones and a firmware dump | The same sources, plus browser input and storage behavior | The same sources, plus recovered language fonts and the supplied PPM language chart | The same sources, plus photographs of the phone's keypad for the key shapes and labels |
+| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` | [`web/`](web), tag `v2.1.0` | [`web/`](web), tag `v2.1.2` | [`web/`](web), tag `v2.2.0` |
+| Run it | [Run the 2021 build](#run-the-2021-build) | Historical browser edition | Historical browser edition | Historical browser edition | [Open the latest browser edition](#play-v22) |
+| The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) |
 
 | When | What |
 | --- | --- |
@@ -33,10 +33,11 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 | 13 Nov 2026 | The v2.1 browser release adds firmware-decoded tones, autosave, Options, localization and mobile controls |
 | 13 Nov 2026 | v2.1.1 work replaces the partial font tables with Nokia firmware bitmaps |
 | 13 Nov 2026 | v2.1.2 adds translated menus for all 36 languages in the supplied v6.39 PPM chart |
+| 14 Nov 2026 | v2.2.0 redesigns the keypad after the real phone (key shapes, key labels) and gives the LCD a panel-like response: tag `v2.2.0` |
 
 The 2021 files are exactly as they were uploaded: `git diff v1.0 -- "Snake II" "Snake II Nokia 3310 in Java.pdf"` is empty.
 
-## Play v2.1.2
+## Play v2.2
 
 **[▶ Play in your browser](https://gamekiller168.github.io/Snake_II/)** (GitHub Pages, deployed from `web/` whenever a push to `main` changes it).
 
@@ -315,7 +316,7 @@ What keeps that honest is checking, not trust: every claim has an evidence tag, 
 <sub>The page around the display: the function keys and the keypad for touch screens.</sub>
 </p>
 
-### What is still open in v2.1.2
+### What is still open in v2.2
 
 Not everything is known yet. [`web/FIDELITY.md`](web/FIDELITY.md) lists every element with what it rests on and what would settle the estimates. The main gaps:
 
@@ -329,7 +330,7 @@ If you own an English Nokia 3310: footage that is straight on, close, in focus, 
 
 ## The code
 
-v2.1.2 continues the v2.0 browser recreation. The 2021 Java remake remains unchanged:
+v2.2 continues the v2.0 browser recreation. The 2021 Java remake remains unchanged:
 
 - `web/js/engine.js`, `rng.js`, `config.js`: the game logic, written by hand from the rules of the phone's program and tested against it.
 - `web/js/tiles.js`, `scene.js`, `font.js`: the pictures of the game (snake, apple, bonus creatures, score), read from filmed frames of real phones and checked against 183 measured frames and against the program's pictures.
@@ -340,7 +341,7 @@ v2.1.2 continues the v2.0 browser recreation. The 2021 Java remake remains uncha
 ```
 Snake II/                          the 2021 Java Swing sources (tag v1.0, never modified)
 Snake II Nokia 3310 in Java.pdf    the 2021 write-up (Hungarian)
-web/                               v2.1.2, the browser edition: no build, no dependencies
+web/                               v2.2, the browser edition: no build, no dependencies
   index.html, css/, js/            the page and the game
   tests/                           the tests and their fixtures (recorded numbers, measured LCD states)
   FIDELITY.md                      the evidence ledger
@@ -351,7 +352,7 @@ LICENSE                            MIT, for the code and the text (what it does 
 
 ### Tests
 
-`cd web && npm test` (Node 22, nothing to install): 386 tests. The engine against recorded program conversations, the picture library against measured frames, the phone on its virtual clock, tone scheduling, input mapping, localization, save/restore and storage behavior. There is no build step; Pages publishes the static `web/` files.
+`cd web && npm test` (Node 22, nothing to install): 398 tests. The engine against recorded program conversations, the picture library against measured frames, the phone on its virtual clock, tone scheduling, input mapping, localization, save/restore and storage behavior. There is no build step; Pages publishes the static `web/` files.
 
 ## Credits and legal
 
@@ -369,7 +370,7 @@ The MIT License does not cover Nokia's work: the pixel pictures and texts taken 
 
 ## Magyarul
 
-Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.1.2` kiadás a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya, eredeti hangszekvenciák, automatikus mentés, Options és a v6.39 PPM táblázatában szereplő 36 nyelvre fordított menü.
+Ez a repó a Nokia 3310 Snake II-jének két feldolgozása. A `v1.0` a 2021-es Java-verzió (`Snake II/`, változatlanul); a hozzá tartozó PDF magyarul van meg (`Snake II Nokia 3310 in Java.pdf`), a fenti 2021-es fejezet ennek az angol átirata a képeivel együtt. A `v2.2` változat a valódi Nokia 3310 Snake II-je böngészőben, a `web/` mappában: indítási animáció, körkörös menük, 9 szint, 6 pálya, eredeti hangszekvenciák, automatikus mentés, Options és a v6.39 PPM táblázatában szereplő 36 nyelvre fordított menü.
 
 A 2026-os fejlesztés MI-vel (Claude) készült. A képek és az időzítések valódi telefonokról készült videókból vannak mérve, a szabályok a telefon firmware-éből kiolvasva és kézzel újraírva, a játékmotort pedig 84 rögzített beszélgetéssel teszteljük a telefon saját programjával szemben. Hogy melyik elem mire épül (a telefon programja, videó vagy becslés), azt a [`web/FIDELITY.md`](web/FIDELITY.md) tartalmazza.
 

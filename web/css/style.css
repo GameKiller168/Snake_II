@@ -1,28 +1,13 @@
-/* Snake II - the page around the display. Plain and dark so that the display is the only thing to look at. */
-
+/* Snake II - a quiet page around the LCD and its tactile keypad. */
 :root {
   --page: #14161a;
-  --key: #2a2e35;
-  --key-top: #3a3f48;
-  --key-down: #1d2025;
   --ink: #d5d8de;
   --dim: #8a909b;
-  --bezel: #0b0c0e;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  margin: 0;
-  min-height: 100%;
-  background: var(--page);
-  color: var(--ink);
-}
-
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--page); color: var(--ink); }
 body {
   font-family: var(--sans);
   -webkit-tap-highlight-color: transparent;
@@ -31,159 +16,188 @@ body {
   display: flex;
   justify-content: center;
 }
-
 .unit {
-  /* the display is as wide as the window allows, but never so tall that the keys fall off the bottom */
-  --lcd-w: min(100vw - 24px, (100vh - 400px) * 35 / 24, 760px);
-  --lcd-w: min(100vw - 24px, (100dvh - 400px) * 35 / 24, 760px);
-  width: max(var(--lcd-w), 280px);
+  --component-w: min(calc(100vw - 24px), 460px, max(260px, calc((100vh - 190px) * .60)));
+  --component-w: min(calc(100vw - 24px), 460px, max(260px, calc((100dvh - 190px) * .60)));
+  width: var(--component-w);
   padding: max(12px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 14px;
 }
-
 .title {
   margin: 0;
   font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-weight: 650;
+  letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--dim);
   text-align: center;
 }
-
 .screen {
-  background: var(--bezel);
-  padding: clamp(8px, 2.4vw, 18px);
-  border-radius: 14px;
-  box-shadow: inset 0 0 0 1px #20232a, 0 6px 24px rgba(0, 0, 0, 0.45);
+  filter: drop-shadow(0 7px 9px rgba(0, 0, 0, .48));
 }
-
-#lcd {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 35 / 24;          /* 84 x 10 : 48 x 12 */
-  border-radius: 3px;
+.screen-defs { position: absolute; width: 0; height: 0; }
+.screen-frame {
+  padding: clamp(7px, calc(var(--component-w) * .025), 12px);
+  background: linear-gradient(155deg, #30373a, #111719 55%, #20282a);
+  clip-path: url(#screen-outline);
 }
-
-/* --- keys ---------------------------------------------------------------------------------------------- */
+.screen-glass {
+  padding: clamp(10px, calc(var(--component-w) * .04), 19px)
+    clamp(10px, calc(var(--component-w) * .035), 16px)
+    clamp(8px, calc(var(--component-w) * .035), 16px);
+  background: radial-gradient(ellipse at 50% 46%, #a2ad8a 45%, #99a581 82%, #899675 100%);
+  box-shadow: inset 0 3px 6px rgba(42, 55, 34, .5), inset 0 -2px 3px rgba(211, 222, 183, .25);
+  clip-path: url(#screen-outline);
+}
+#lcd { display: block; width: 100%; height: auto; aspect-ratio: 35 / 24; }
 
 .keys {
+  width: 100%;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
 }
-
 .functions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 2fr;
-  gap: 10px;
-  padding: 4px;
-  border-radius: 13px;
-  background: linear-gradient(180deg, #0d0f12, #1b1e23);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.78), inset 0 0 0 1px #08090b;
+  grid-template-columns: minmax(44px, 1.55fr) minmax(84px, 2.2fr) minmax(44px, .85fr) minmax(44px, .85fr);
+  grid-template-areas: "clear select down up";
+  align-items: center;
+  gap: clamp(7px, calc(var(--component-w) * .026), 12px);
+  padding: 7px 8px 10px;
 }
-
 .digits {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  width: min(100%, 360px);
-  margin: 0 auto;
-  padding: 4px;
-  border-radius: 15px;
-  background: linear-gradient(180deg, #0d0f12, #1b1e23);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.78), inset 0 0 0 1px #08090b;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(12px, calc(var(--component-w) * .05), 23px);
+  row-gap: 8px;
+  padding: 3px clamp(10px, calc(var(--component-w) * .039), 18px) 13px;
 }
-
 .keys button {
+  --angle: 0deg;
+  --offset: 0px;
   appearance: none;
-  border: 1px solid #444a54;
+  position: relative;
+  border: 1px solid #717a7b;
   margin: 0;
   padding: 0;
-  height: 54px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #454b55 0%, #383d46 42%, #292d34 100%);
-  color: #f0f1f3;
-  font: inherit;
-  font-size: 20px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.24),
-    0 4px 0 #101216, 0 6px 8px rgba(0, 0, 0, 0.36);
+  color: #172d2b;
+  font-family: var(--sans);
+  cursor: pointer;
+  touch-action: manipulation;
+  background:
+    radial-gradient(ellipse at 48% 18%, rgba(255,255,255,.8), transparent 54%),
+    linear-gradient(175deg, #eef0ea 0%, #cdd3d0 36%, #adb7b5 70%, #8e9a99 100%);
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.84),
+    inset 0 -3px 3px rgba(50,62,61,.32),
+    0 3px 0 #747f7d, 0 5px 0 #46514f,
+    0 0 0 4px #0d1114, 0 0 0 6px #292f32,
+    0 9px 9px rgba(0,0,0,.55);
+  transform: translateY(var(--offset)) rotate(var(--angle));
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out, filter 80ms ease-out;
+}
+.keys button:active, .keys button.down, .keys button.pressed {
+  filter: brightness(.92);
+  box-shadow:
+    inset 0 3px 7px rgba(42,53,52,.4),
+    inset 0 1px 1px rgba(255,255,255,.5),
+    0 1px 0 #46514f, 0 0 0 4px #0d1114, 0 0 0 6px #292f32,
+    0 4px 5px rgba(0,0,0,.5);
+  transform: translateY(calc(var(--offset) + 3px)) rotate(var(--angle));
+  transition: none;
+}
+.keys button:focus:not(:focus-visible) { outline: none; }
+.keys button:focus-visible { outline: 2px solid #e7c66e; outline-offset: 7px; }
+.functions button { height: clamp(48px, calc(var(--component-w) * .16), 72px); font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.function-clear { grid-area: clear; border-radius: 47% 27% 52% 32% / 58% 36% 60% 46%; --angle: 7deg; }
+.function-up { grid-area: up; border-radius: 54% 32% 42% 65% / 64% 43% 50% 40%; --angle: -5deg; }
+.function-down { grid-area: down; border-radius: 63% 37% 32% 58% / 59% 58% 40% 45%; --angle: -7deg; }
+.keys .function-up, .keys .function-down { font-size: 15px; }
+.keys .function-select {
+  grid-area: select;
+  height: clamp(50px, calc(var(--component-w) * .17), 76px);
+  border-radius: 48% 48% 48% 48% / 43% 43% 70% 70%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 5px 10px 7px;
+  font-size: clamp(11px, calc(var(--component-w) * .037), 16px);
+  font-weight: 700;
+}
+.navi-line {
+  display: block;
+  width: min(68%, 83px);
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: #0077c8;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.35), 0 1px 1px rgba(15,54,77,.4);
+}
+.digits button {
+  --key-h: clamp(48px, calc(var(--component-w) * .176), 82px);
+  height: var(--key-h);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  touch-action: manipulation;
-  transform: translateY(0);
-  transition: transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out;
+  gap: 5px;
+  line-height: 1;
+  font-weight: 700;
 }
-
-.keys .functions button {
-  font-size: 16px;
-  height: 48px;
+.digits button:nth-child(3n + 1) {
+  --angle: 6deg;
+  border-radius: 47% 56% 57% 44% / 57% 53% 48% 46%;
 }
-
-.keys button.down,
-.keys button:active {
-  background: linear-gradient(180deg, #292d34 0%, #24272d 100%);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.58),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 0 #101216;
-  transform: translateY(3px) scale(0.985);
-  transition: none;
+.digits button:nth-child(3n + 2) {
+  --offset: 6px;
+  border-radius: 50% / 48%;
 }
-
-.keys button:focus:not(:focus-visible) {
-  outline: none;
+.digits button:nth-child(3n) {
+  --angle: -6deg;
+  border-radius: 56% 47% 44% 57% / 53% 57% 46% 48%;
 }
-
-.keys button:focus-visible {
-  outline: 2px solid #e7c66e;
-  outline-offset: 3px;
-}
-
-.keys .hint {
-  font-size: 11px;
-  color: #c2c7d0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .keys button,
-  .keys button.down,
-  .keys button:active {
-    transition: none;
+.number { display: inline-block; font-size: calc(var(--key-h) * .5); font-weight: 800; letter-spacing: -.04em; transform: scaleX(1.22); }
+.letters { display: inline-block; font-size: calc(var(--key-h) * .29); font-weight: 800; letter-spacing: .03em; transform: scaleX(1.28); }
+.number.star, .letters.voicemail, .letters.bottom-icon, .letters.plus { transform: none; }
+.digits button:nth-child(3n + 1) .number { position: absolute; top: 7px; left: 17%; transform-origin: left center; }
+.digits button:nth-child(3n + 1) .letters { position: absolute; right: 15%; bottom: 17px; transform-origin: right center; }
+.digits button:nth-child(3n) .number { position: absolute; top: 7px; right: 17%; transform-origin: right center; }
+.digits button:nth-child(3n) .letters { position: absolute; left: 14%; bottom: 17px; transform-origin: left center; }
+/* keys 1..9: the label sits lower in the key, as on the original (the three bottom keys stay as they are) */
+.digits button:nth-child(-n + 9):nth-child(3n + 1) .number, .digits button:nth-child(-n + 9):nth-child(3n) .number { top: calc(7px + var(--key-h) * .065); }
+.digits button:nth-child(-n + 9):nth-child(3n + 1) .letters, .digits button:nth-child(-n + 9):nth-child(3n) .letters { bottom: calc(17px - var(--key-h) * .065); }
+.digits button:nth-child(-n + 9):nth-child(3n + 2) { padding-top: calc(var(--key-h) * .13); }
+.glyph { display: block; width: clamp(20px, calc(var(--component-w) * .066), 30px); height: auto; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.digits button:nth-child(3n + 2) { gap: 9px; padding-right: 10px; }
+.digits button:nth-child(3n + 2) .number { transform-origin: left center; margin-right: 4px; }
+.digits button:nth-child(3n + 2) .letters { position: relative; top: .22em; transform-origin: left center; }
+.digits button:nth-child(3n + 2) .letters.bottom-icon { top: .32em; }
+.voicemail svg { display: block; width: calc(var(--key-h) * .74); height: auto; stroke: currentColor; stroke-width: 2.4; }
+.bottom-icon svg { display: block; width: calc(var(--key-h) * .44); height: auto; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+.number.star svg { display: block; width: calc(var(--key-h) * .49); height: auto; stroke: currentColor; stroke-width: 4.6; stroke-linecap: round; fill: none; }
+.letters.plus svg { display: block; width: calc(var(--key-h) * .24); height: auto; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; fill: none; }
+.digits button[data-key="*"] .number { top: 18%; left: 14%; }
+.digits button[data-key="*"] .letters { right: 24%; bottom: 17%; }
+.noscript { text-align: center; color: var(--dim); }
+@media (max-width: 260px) {
+  .functions {
+    grid-template-columns: minmax(44px, 1fr) minmax(64px, 1.6fr) minmax(44px, 1fr);
+    grid-template-rows: repeat(2, minmax(44px, auto));
+    grid-template-areas: "clear select down" "clear select up";
+    gap: 5px;
+    padding: 5px;
   }
+  .keys .function-up, .keys .function-down { height: 44px; }
 }
-
-.help {
-  margin: 2px 4px 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--dim);
-  text-align: center;
-}
-
-.noscript {
-  text-align: center;
-  color: var(--dim);
-}
-
-/* a touch device has no use for the keyboard line */
-@media (hover: none) and (pointer: coarse) {
-  .help {
-    display: none;
+@media (hover: none) and (pointer: coarse) { @media (max-width: 340px) { @media (max-height: 620px) {
+  .unit { padding: max(8px, env(safe-area-inset-top)) 0 max(10px, env(safe-area-inset-bottom)); gap: 9px; }
   }
-}
-
-@media (min-width: 900px) and (min-height: 700px) {
-  .keys button {
-    height: 58px;
-  }
-}
+@media (prefers-reduced-motion: reduce) { .keys button, .keys button.down, .keys button.pressed, .keys button:active { transition: none; } }

@@ -78,6 +78,7 @@
     this.onEvent = null;
     this.onChange = null;
     this.onLanguageChange = null;
+    this.runtime = null;
     if (options.skipSplash) this.showMain();
   }
 
@@ -96,6 +97,7 @@
 
   /** Let ms milliseconds pass; everything that falls due in between happens in order. */
   Phone.prototype.advance = function (ms) {
+    if (this.runtime) { this.runtime.advance(ms); return; }
     var target = this.time + ms;
     for (var guard = 0; guard < 100000; guard++) {
       var due = this.nextDue();
@@ -356,6 +358,12 @@
    * One key press. key: 'select', 'c', 'scrollUp', 'scrollDown', '0'..'9', 'cw', 'ccw'.
    */
   Phone.prototype.press = function (key) {
+    if (this.runtime) { this.runtime = null; this.showOptions(); return; }
+    if (this.mode === 'menu' && this.menu.kind === 'options' && key === '9') {
+      var Runtime = NS.Runtime || (req ? require('./runtime.js') : null);
+      this.runtime = new Runtime(this);
+      return;
+    }
     switch (this.mode) {
       case 'splash':
         // [EST] the footage does not show whether a key ends the start-up animation: it is ignored
@@ -477,6 +485,7 @@
     Text.setFontPack(I18n.fontPack(this.store.language));
     var fb = this.fb;
     var t = this.time - this.modeStart;
+    if (this.runtime) return this.runtime.draw(fb);
     switch (this.mode) {
       case 'splash': Screens.drawSplash(fb, t); break;
       case 'fireworks': Screens.drawFireworks(fb, t); break;

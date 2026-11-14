@@ -9,6 +9,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+require('./support/locale.js');
 require('../js/config.js');
 const Rng = require('../js/rng.js');
 const Store = require('../js/store.js');

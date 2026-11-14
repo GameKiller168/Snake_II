@@ -95,12 +95,18 @@
     }
 
     document.addEventListener('keydown', function (e) {
+      var id = 'k:' + (e.code || e.key);
+      if (options.captureAll && options.captureAll()) {
+        e.preventDefault();
+        if (!e.repeat && !keyboard[id] && options.onAnyKey) options.onAnyKey(keyForEvent(e, true));
+        return;
+      }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       var key = keyForEvent(e, options.inGame());
+      if (!key && options.additionalKey) key = options.additionalKey(e);
       if (!key) return;
       e.preventDefault();
       if (e.repeat) return;
-      var id = 'k:' + (e.code || e.key);
       if (keyboard[id]) return;
       keyboard[id] = key;
       addSource(key, id);
@@ -119,6 +125,7 @@
       e.preventDefault();
       var id = 'p:' + (e.pointerId === undefined ? 'default' : e.pointerId);
       var key = b.getAttribute('data-key');
+      if (options.captureAll && options.captureAll()) { if (options.onAnyKey) options.onAnyKey(key); return; }
       buttons[key] = b;
       if (!pointers[id]) { pointers[id] = key; addSource(key, id); }
     });

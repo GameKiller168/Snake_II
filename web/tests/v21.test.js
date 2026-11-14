@@ -2,6 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+require('./support/locale.js');
 const Engine = require('../js/engine.js');
 const Rng = require('../js/rng.js');
 const Phone = require('../js/phone.js');

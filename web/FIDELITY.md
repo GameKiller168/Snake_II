@@ -1,4 +1,4 @@
-# v2.1.2 fidelity ledger
+# v2.2 fidelity ledger
 
 Goal: the browser edition recreates Snake II as it runs on a real Nokia 3310 (firmware v6.39). This file says, element by element, what each part rests on. Whatever is an estimate is marked as one, here and in the code (`[EST]`), and is replaced as soon as better evidence exists. The v2.1 browser-only features are not part of the original phone; their approximations are identified below.
 
@@ -66,6 +66,7 @@ The game's sound scripts and the DTMF table were decoded from the English v6.39 
 | LCD | 84 x 48, pixels 10 : 12 | VIDEO | measured 10.008 x 11.967 |
 | LCD look | one grey-green, a thin lighter line between rows of dark pixels (about 40 % as bright as the background), hardly any gap between columns | VIDEO, EST | gap strength measured; **colours are EST** (they depend on camera and light: teal-green in one clip, khaki in another) |
 | Frame of the game | lines on rows 6 and 8, columns 0 and 83, row 47; layers in the order of the program | FW, VIDEO | checked against the program's picture in the oracle traces; row 47 is completed to a full line in the stored frames of `phone-states.json` (it was not read reliably), the footage test compares the field only |
+| LCD response | a pixel is a level, not a switch: it darkens in a steady ramp of 45 ms and clears with a 45 ms time constant, so a moving snake has a soft head and a short fading trail | EST | typical of passive (STN) panels of the late 1990s; **not measured** on this phone, the footage is too compressed to tell |
 | Snake pieces | straight x 4 directions, corners x 4, heads x 4 (+ open mouth when food is in the next cell), tails x 4, bulge of a cell that swallowed food | VIDEO, FW | read from 482 tracked frames of B; the model reproduces 470 of them pixel for pixel, the other 12 differ in one marginal LCD pixel; the oracle traces check them against the program's picture |
 | Apple | 3 x 3 ring in the upper left of its 4 x 4 cell | VIDEO | measured over 51 apples |
 | Bonus creatures | 8 x 4 pixels, six pictures | VIDEO and FW for 1, 2, 4, 5; **FW, no footage for 0 and 3** | B shows creatures 1, 4, 2, 5, 4, 5, 1, 5; 0 and 3 did not appear in any footage. All six occur in the oracle traces (field and header icon) and match the program's picture there, so 0 and 3 are checked against the program, only never seen on a real phone |
@@ -116,7 +117,7 @@ Measured in footage unless it says otherwise.
 | Storage notice | an in-flow English notice explains that local storage keeps the game and top score on this device | browser-only | it can be dismissed and remembers the acknowledgement if storage works |
 | Hidden tab | the game clock stops while the page is hidden and one frame never advances it by more than 250 ms |
 
-## Not in v2.1.2
+## Not in v2.2
 
 - The special bonus item (see "Game logic").
 - The icon of the top score note.

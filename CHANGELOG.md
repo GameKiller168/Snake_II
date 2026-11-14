@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.0 — 2026-11-14
+
+- Redesigned the on-screen keypad after the Nokia 3310: sculpted, slightly slanted keys with a domed look and a pressed state, a silver Select key with its blue line, and control keys marked with a C and two scroll chevrons.
+- The key labels follow the phone: digits, letters, the voicemail mark on 1, the star and plus on *, the space mark on 0 and the shift mark on #, placed and sized as on the original keys. The direction arrows on 2, 4, 6 and 8 are gone.
+- The display now behaves like a passive-matrix panel of the era: pixels fade in over a few frames and clear more slowly, so moving things leave a short fading trail. The times are estimates, see `web/FIDELITY.md`.
+- The display is framed in a dark bezel with the rounded outline of the phone's window; the page no longer shows a version label or a line of keyboard hints.
+- The tests no longer depend on the language of the machine that runs them.
+
 ## v2.1.2 — 2026-11-13
 
 - Localized the menu and maze names for all 36 languages listed in the supplied Nokia 3310 v6.39 PPM chart.

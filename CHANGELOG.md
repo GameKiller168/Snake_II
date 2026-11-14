@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.0 — 2026-11-14
+
+- The game is now an installable PWA: a web app manifest (`standalone` / `fullscreen`, portrait, dark `#14161a` colours), PNG icons (192, 512, maskable and a 180 px Apple touch icon) and a service worker that caches every static file so the game also runs offline. Install from the browser's own menu (Chrome, Brave: Install app; Safari: Add to Home Screen); the page itself shows no install prompt or any other new element.
+- iOS standalone mode: the Apple web-app meta tags, `viewport-fit=cover` and safe-area insets on all four sides keep the phone clear of the status bar and home indicator.
+
 ## v2.2.2 — 2026-11-14
 
 - The start-up animation now plays every time the page loads, also when a saved game or menu is restored; the menu then comes up as it was left (with "Continue" when a game is paused), as before.

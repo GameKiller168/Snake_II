@@ -311,9 +311,39 @@
 
   // ----- large font of the notes ------------------------------------------------------------------------------------
 
+  // The large glyphs of some locale packs (C, D, E, I, J) were extracted in two halves: the top 5 rows of a tall glyph
+  // sit in rows 8..12 of its own record and the bottom 6 rows in rows 0..5 of another record, rows 6 and 7 are empty.
+  // Drawn as they are, such glyphs come out as a jumble (the "É" of "NYERTÉL!"). The halves cannot be joined reliably
+  // (the records are not in code order everywhere), so the whole glyph of PPM B is used where it has one; otherwise
+  // the line falls back to the bold small font.
+  function blankRows(rows, from, to) {
+    for (var i = from; i < to; i++) if (rows[i] === undefined || rows[i].indexOf('#') >= 0) return false;
+    return true;
+  }
+
+  function isSplitLarge(g) {
+    var r = g.rows;
+    return r.length === 13 && blankRows(r, 6, 8) && !blankRows(r, 0, 6) && !blankRows(r, 8, 13);
+  }
+
+  function baseLargeGlyph(ch) {
+    var saved = activeFontPack;
+    activeFontPack = 'B';
+    try { return firmwareGlyph('largebold', ch); } finally { activeFontPack = saved; }
+  }
+
+  var repairedLarge = {};
+
   function largeGlyph(ch) {
     if (ch === '\u2018' || ch === '\u2019') ch = "'";
-    return firmwareGlyph('largebold', ch);
+    var g = firmwareGlyph('largebold', ch);
+    if (!g || ch.charCodeAt(0) < 0x7f || !isSplitLarge(g)) return g;
+    var key = activeFontPack + ':' + ch;
+    if (!(key in repairedLarge)) {
+      var base = baseLargeGlyph(ch);
+      repairedLarge[key] = base && !isSplitLarge(base) ? base : null;
+    }
+    return repairedLarge[key];
   }
 
   function canDrawLarge(str) {

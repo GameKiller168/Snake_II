@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.1 — 2026-11-14
+
+- Fixed the large font of the notes in the Hungarian, Spanish, Portuguese, Romanian, Croatian, Slovenian, Serbian and other locale packs: capital letters with accents (such as the É of "NYERTÉL!") were drawn as a jumble, because the extracted tables of PPM C, D, E, I and J hold those glyphs in two halves. Such glyphs now come from the whole PPM B table, and a line that still needs a damaged glyph (some Greek, Ukrainian and Hebrew capitals) is drawn in the bold small font instead.
+
 ## v2.3.0 — 2026-11-14
 
 - The game is now an installable PWA: a web app manifest (`standalone` / `fullscreen`, portrait, dark `#14161a` colours), PNG icons (192, 512, maskable and a 180 px Apple touch icon) and a service worker that caches every static file so the game also runs offline. Install from the browser's own menu (Chrome, Brave: Install app; Safari: Add to Home Screen); the page itself shows no install prompt or any other new element.

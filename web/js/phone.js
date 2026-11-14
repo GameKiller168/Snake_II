@@ -478,6 +478,11 @@
     return true;
   };
 
+  /** Show the start-up animation (again); the menu as it is now follows it. */
+  Phone.prototype.playIntro = function () {
+    this.setMode('splash');
+  };
+
   // ----- picture --------------------------------------------------------------------------------------------------------
 
   /** The picture of the display now (the same Framebuffer every time). */

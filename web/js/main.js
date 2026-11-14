@@ -14,6 +14,7 @@
   var save = NS.Save.create({ storage: storage });
   var snap = save.load();
   if (snap) phone.restore(snap);
+  phone.playIntro();                // every load starts with the start-up animation; the restored menu follows it
   var autosave = NS.Save.autosave({ phone: phone, save: save });
   var originalPress = phone.press;
   phone.press = function (key) { originalPress.call(phone, key); autosave.touch(); autosave.flush(); };

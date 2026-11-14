@@ -154,3 +154,30 @@ test('autosave coalesces writes and flushes immediately', function () {
   auto.touch(); advance(200); auto.flush(); assert.equal(writes.length, 3);
   auto.stop();
 });
+
+test('the start-up animation plays before a restored menu, which then comes up as it was saved', function () {
+  var source = new Phone({ rng: new Rng(5), skipSplash: true });
+  source.startGame(); source.advance(300); source.pause();
+  var saved = JSON.parse(JSON.stringify(source.snapshot()));
+  var phone = new Phone({ rng: new Rng(1) });
+  assert.equal(phone.restore(saved), true);
+  assert.equal(phone.mode, 'menu');
+  phone.playIntro();
+  assert.equal(phone.mode, 'splash');
+  phone.advance(Phone.TIMING.SPLASH_MS - 1);
+  assert.equal(phone.mode, 'splash');
+  assert.ok(phone.draw().px.some(Boolean));
+  phone.advance(1);
+  assert.equal(phone.mode, 'menu');
+  assert.equal(phone.menu.items[0], phone.t('CONTINUE'));
+  assert.equal(phone.menu.state.c, 0);
+  assert.equal(phone.paused, true);
+  // closing the tab during the animation must not lose the paused game
+  var again = new Phone({ rng: new Rng(2) });
+  again.restore(saved); again.playIntro(); again.advance(500);
+  var mid = JSON.parse(JSON.stringify(again.snapshot()));
+  var third = new Phone({ rng: new Rng(3) });
+  assert.equal(third.restore(mid), true);
+  third.playIntro(); third.advance(Phone.TIMING.SPLASH_MS);
+  assert.equal(third.menu.items[0], third.t('CONTINUE'));
+});

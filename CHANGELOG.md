@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.2 — 2026-11-14
+
+- The start-up animation now plays every time the page loads, also when a saved game or menu is restored; the menu then comes up as it was left (with "Continue" when a game is paused), as before.
+
 ## v2.2.1 — 2026-11-14
 
 - Removed the pixel fade-in and fading trail that v2.2.0 added to the display: the LCD draws every picture at once again, as in v2.1.2.

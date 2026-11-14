@@ -16,13 +16,13 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 
 ## Versions at a glance
 
-| | v1.0, 2021 | v2.0, 2026 | v2.1.0, 2026 | v2.1.2, 2026 | v2.2, 2026 |
-| --- | --- | --- | --- | --- | --- |
-| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program | v2.0 plus decoded game/key tones, vibration, Options, eight languages and autosave | v2.1 with Nokia bitmap fonts and menus in all 36 listed PPM languages | v2.1.2 with a keypad redesigned after the real phone's keys: key shapes and key labels as on the phone |
-| Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones and a firmware dump | The same sources, plus browser input and storage behavior | The same sources, plus recovered language fonts and the supplied PPM language chart | The same sources, plus photographs of the phone's keypad for the key shapes and labels |
-| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` | [`web/`](web), tag `v2.1.0` | [`web/`](web), tag `v2.1.2` | [`web/`](web), tags `v2.2.0`, `v2.2.1` |
-| Run it | [Run the 2021 build](#run-the-2021-build) | Historical browser edition | Historical browser edition | Historical browser edition | [Open the latest browser edition](#play-v22) |
-| The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) |
+| | v1.0, 2021 | v2.2, 2026 (latest) |
+| --- | --- | --- |
+| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program: decoded game and key tones, vibration, Options, menus in all 36 listed PPM languages with Nokia bitmap fonts, autosave, and a keypad modelled on the phone's |
+| Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones, a firmware dump, the supplied PPM language chart and photographs of the phone's keypad |
+| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), latest tag `v2.2.2` |
+| Run it | [Run the 2021 build](#run-the-2021-build) | [Open the latest browser edition](#play-v22) |
+| The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) |
 
 | When | What |
 | --- | --- |
@@ -33,7 +33,7 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 | 13 Nov 2026 | The v2.1 browser release adds firmware-decoded tones, autosave, Options, localization and mobile controls |
 | 13 Nov 2026 | v2.1.1 work replaces the partial font tables with Nokia firmware bitmaps |
 | 13 Nov 2026 | v2.1.2 adds translated menus for all 36 languages in the supplied v6.39 PPM chart |
-| 14 Nov 2026 | v2.2.0 redesigns the keypad after the real phone (key shapes, key labels): tag `v2.2.0`; v2.2.1 takes out the pixel fading the display briefly had: tag `v2.2.1` |
+| 14 Nov 2026 | v2.2 redesigns the keypad after the real phone (key shapes, key labels) and plays the start-up animation on every load: tag `v2.2.2` |
 
 The 2021 files are exactly as they were uploaded: `git diff v1.0 -- "Snake II" "Snake II Nokia 3310 in Java.pdf"` is empty.
 
@@ -352,7 +352,7 @@ LICENSE                            MIT, for the code and the text (what it does 
 
 ### Tests
 
-`cd web && npm test` (Node 22, nothing to install): 398 tests. The engine against recorded program conversations, the picture library against measured frames, the phone on its virtual clock, tone scheduling, input mapping, localization, save/restore and storage behavior. There is no build step; Pages publishes the static `web/` files.
+`cd web && npm test` (Node 22, nothing to install): 399 tests. The engine against recorded program conversations, the picture library against measured frames, the phone on its virtual clock, tone scheduling, input mapping, localization, save/restore and storage behavior. There is no build step; Pages publishes the static `web/` files.
 
 ## Credits and legal
 

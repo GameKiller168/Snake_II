@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.3 — 2026-11-15
+
+- A finger now presses whatever key is under it wherever it started: touching or dragging anywhere on the page (not only on the keypad) and sliding over the keys presses them, and leaving and re-entering the keypad works any number of times. The page itself no longer scrolls or zooms under a finger.
+
 ## v2.3.2 — 2026-11-15
 
 - The on-screen keypad is now fully multi-touch: any number of keys, up to all of them, can be held at once, each finger working independently. Dragging a finger over the keypad lets go of the key it leaves and presses the key it arrives on, also while other fingers stay down; a finger lifted outside the keypad no longer leaves a key stuck.

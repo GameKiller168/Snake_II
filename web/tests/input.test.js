@@ -259,3 +259,28 @@ test('the on-screen pad: several fingers press several keys at once, and a slidi
     assert.deepEqual(got, ['1', '2', '3', '2']);
   });
 });
+
+test('a finger that starts off the pad and slides onto it presses the key under it', () => {
+  withPage((doc) => {
+    const padHandlers = {};
+    const classes = new Set();
+    const key = { getAttribute: () => '5', classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c) } };
+    key.closest = () => key;
+    const pad = { addEventListener(t, f) { padHandlers[t] = f; }, contains: (n) => n === key };
+    let under = null;
+    doc.elementFromPoint = () => under;
+    const got = [], released = [];
+    Input.attach({ inGame: () => true, onPress: (k) => got.push(k), onRelease: (k) => released.push(k), pad });
+    doc.fire('pointerdown', { target: {}, pointerId: 4, clientX: 0, clientY: 0 });
+    assert.deepEqual(got, []);
+    under = key;
+    doc.fire('pointermove', { pointerId: 4, clientX: 1, clientY: 1 });
+    assert.deepEqual(got, ['5']);
+    under = null;
+    doc.fire('pointermove', { pointerId: 4, clientX: 2, clientY: 2 });
+    assert.deepEqual(released, ['5']);
+    under = key;
+    doc.fire('pointermove', { pointerId: 4, clientX: 1, clientY: 1 });
+    assert.deepEqual(got, ['5', '5']);
+  });
+});

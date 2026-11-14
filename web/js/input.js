@@ -164,6 +164,19 @@
     }
     pad.addEventListener('pointerup', releasePointer);
     pad.addEventListener('pointercancel', releasePointer);
+    // A finger that starts anywhere on the page, or wanders off the pad and back, presses whatever key is under it.
+    document.addEventListener('pointerdown', function (e) {
+      if (e.target && pad.contains && pad.contains(e.target)) return;
+      if (options.captureAll && options.captureAll()) return;
+      var id = pointerId(e);
+      dragging[id] = true;
+      moveTo(id, keyButtonAt(e.clientX, e.clientY));
+    });
+    document.addEventListener('pointermove', function (e) {
+      var id = pointerId(e);
+      if (!dragging[id]) return;
+      moveTo(id, keyButtonAt(e.clientX, e.clientY));
+    });
     // a finger lifted outside the pad must not leave a key stuck down
     if (typeof window !== 'undefined' && window.addEventListener) {
       window.addEventListener('pointerup', releasePointer);

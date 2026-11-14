@@ -16,11 +16,11 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 
 ## Versions at a glance
 
-| | v1.0, 2021 | v2.0, 2026 | v2.1.0, 2026 | v2.1.2, 2026 | v2.2.0, 2026 |
+| | v1.0, 2021 | v2.0, 2026 | v2.1.0, 2026 | v2.1.2, 2026 | v2.2, 2026 |
 | --- | --- | --- | --- | --- | --- |
-| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program | v2.0 plus decoded game/key tones, vibration, Options, eight languages and autosave | v2.1 with Nokia bitmap fonts and menus in all 36 listed PPM languages | v2.1.2 with a keypad redesigned after the real phone's keys and an LCD whose pixels fade in and out like a panel of the era |
+| What it is | A Java Swing remake of Snake II with the Nokia look | The real Nokia 3310 game in a browser, checked against its program | v2.0 plus decoded game/key tones, vibration, Options, eight languages and autosave | v2.1 with Nokia bitmap fonts and menus in all 36 listed PPM languages | v2.1.2 with a keypad redesigned after the real phone's keys: key shapes and key labels as on the phone |
 | Built from | Photos, videos, drawings and measurements of a working phone | Footage of real phones and a firmware dump | The same sources, plus browser input and storage behavior | The same sources, plus recovered language fonts and the supplied PPM language chart | The same sources, plus photographs of the phone's keypad for the key shapes and labels |
-| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` | [`web/`](web), tag `v2.1.0` | [`web/`](web), tag `v2.1.2` | [`web/`](web), tag `v2.2.0` |
+| Where | [`Snake II/`](Snake%20II) and the [PDF write-up](Snake%20II%20Nokia%203310%20in%20Java.pdf) (Hungarian), tag `v1.0` | [`web/`](web), tag `v2.0` | [`web/`](web), tag `v2.1.0` | [`web/`](web), tag `v2.1.2` | [`web/`](web), tags `v2.2.0`, `v2.2.1` |
 | Run it | [Run the 2021 build](#run-the-2021-build) | Historical browser edition | Historical browser edition | Historical browser edition | [Open the latest browser edition](#play-v22) |
 | The story | [2021: the Java remake](#2021-the-java-remake) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) | [2026: reading the real game](#2026-reading-the-real-game) |
 
@@ -33,7 +33,7 @@ Snake II is the snake game that came with the Nokia 3310. This repository follow
 | 13 Nov 2026 | The v2.1 browser release adds firmware-decoded tones, autosave, Options, localization and mobile controls |
 | 13 Nov 2026 | v2.1.1 work replaces the partial font tables with Nokia firmware bitmaps |
 | 13 Nov 2026 | v2.1.2 adds translated menus for all 36 languages in the supplied v6.39 PPM chart |
-| 14 Nov 2026 | v2.2.0 redesigns the keypad after the real phone (key shapes, key labels) and gives the LCD a panel-like response: tag `v2.2.0` |
+| 14 Nov 2026 | v2.2.0 redesigns the keypad after the real phone (key shapes, key labels): tag `v2.2.0`; v2.2.1 takes out the pixel fading the display briefly had: tag `v2.2.1` |
 
 The 2021 files are exactly as they were uploaded: `git diff v1.0 -- "Snake II" "Snake II Nokia 3310 in Java.pdf"` is empty.
 

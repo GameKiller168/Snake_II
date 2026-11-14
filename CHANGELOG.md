@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.1 — 2026-11-14
+
+- Removed the pixel fade-in and fading trail that v2.2.0 added to the display: the LCD draws every picture at once again, as in v2.1.2.
+
 ## v2.2.0 — 2026-11-14
 
 - Redesigned the on-screen keypad after the Nokia 3310: sculpted, slightly slanted keys with a domed look and a pressed state, a silver Select key with its blue line, and control keys marked with a C and two scroll chevrons.
